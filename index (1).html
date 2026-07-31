@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APROVA ENEM — Plataforma de Estudos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --blue-dark:#1E3A8A;
+  --blue:#2563EB;
+  --blue-light:#3B82F6;
+  --blue-50:#EFF6FF;
+  --blue-100:#DBEAFE;
+  --gold:#F59E0B;
+  --gold-dark:#D97706;
+  --gold-50:#FFFBEB;
+  --bg:#F8FAFC;
+  --card:#FFFFFF;
+  --text:#1E293B;
+  --muted:#64748B;
+  --border:#E2E8F0;
+  --success:#10B981;
+  --danger:#EF4444;
+  --radius:14px;
+  --shadow:0 2px 12px rgba(30,58,138,0.07);
+  --shadow-lg:0 8px 30px rgba(30,58,138,0.12);
+  --shadow-hover:0 12px 32px rgba(30,58,138,0.18);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden;}
+h1,h2,h3,h4,h5{font-family:'Poppins',sans-serif;}
+a{text-decoration:none;color:inherit;}
+ul{list-style:none;}
+button{font-family:inherit;cursor:pointer;border:none;}
+input,textarea,select{font-family:inherit;}
+
+/* ===== AUTH SCREENS ===== */
+.auth-wrapper{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--blue-dark) 0%,var(--blue) 50%,var(--blue-light) 100%);padding:20px;position:relative;overflow:hidden;}
+.auth-wrapper::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(245,158,11,0.1) 0%,transparent 50%);animation:authPulse 8s ease-in-out infinite;}
+@keyframes authPulse{0%,100%{transform:scale(1);opacity:0.5;}50%{transform:scale(1.1);opacity:1;}}
+.auth-card{background:#fff;border-radius:20px;padding:44px 38px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,0.2);position:relative;z-index:1;animation:slideUp 0.5s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);}}
+.auth-card .auth-logo{text-align:center;margin-bottom:28px;}
+.auth-card .auth-logo i{font-size:2.4rem;color:var(--gold);margin-bottom:10px;}
+.auth-card .auth-logo h1{font-size:1.5rem;color:var(--blue-dark);font-weight:800;}
+.auth-card .auth-logo p{color:var(--muted);font-size:0.88rem;margin-top:4px;}
+.auth-form .field{margin-bottom:18px;}
+.auth-form label{display:block;font-weight:600;font-size:0.85rem;color:var(--text);margin-bottom:6px;}
+.auth-form input{width:100%;padding:13px 16px;border:2px solid var(--border);border-radius:10px;font-size:0.95rem;transition:border 0.2s;outline:none;}
+.auth-form input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,0.1);}
+.auth-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;border-radius:12px;font-weight:700;font-size:1rem;transition:transform 0.2s,box-shadow 0.2s;margin-top:8px;}
+.auth-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(37,99,235,0.35);}
+.auth-switch{text-align:center;margin-top:18px;font-size:0.88rem;color:var(--muted);}
+.auth-switch a{color:var(--blue);font-weight:600;cursor:pointer;}
+.auth-switch a:hover{text-decoration:underline;}
+.auth-error{background:#FEE2E2;color:var(--danger);padding:10px 14px;border-radius:8px;font-size:0.85rem;margin-bottom:14px;display:none;}
+
+/* ===== APP HEADER ===== */
+.app-header{position:fixed;top:0;left:0;width:100%;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);z-index:1000;border-bottom:1px solid var(--border);transition:box-shadow 0.3s;}
+.app-header.scrolled{box-shadow:0 2px 12px rgba(0,0,0,0.06);}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;max-width:1280px;margin:0 auto;}
+.header-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.2rem;color:var(--blue-dark);}
+.header-logo i{color:var(--gold);font-size:1.4rem;}
+.header-logo span{color:var(--gold);}
+.header-nav{display:flex;align-items:center;gap:8px;}
+.header-nav a{padding:8px 16px;border-radius:8px;font-weight:600;font-size:0.88rem;color:var(--text);transition:0.2s;}
+.header-nav a:hover,.header-nav a.active{background:var(--blue-50);color:var(--blue);}
+.header-user{display:flex;align-items:center;gap:10px;margin-left:12px;}
+.header-user .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--gold));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;}
+.header-user .user-name{font-weight:600;font-size:0.88rem;color:var(--text);}
+.header-user .logout-btn{background:none;color:var(--muted);font-size:0.82rem;padding:6px 12px;border-radius:6px;transition:0.2s;margin-left:4px;}
+.header-user .logout-btn:hover{background:#FEE2E2;color:var(--danger);}
+.hamburger{display:none;background:none;padding:8px;color:var(--blue-dark);font-size:1.3rem;}
+.mobile-nav{display:none;position:fixed;top:62px;left:0;width:100%;background:#fff;flex-direction:column;padding:16px 24px;gap:4px;box-shadow:0 10px 30px rgba(0,0,0,0.08);border-bottom:1px solid var(--border);z-index:999;}
+.mobile-nav.open{display:flex;}
+.mobile-nav a{padding:12px 16px;border-radius:8px;font-weight:600;font-size:0.95rem;transition:0.2s;}
+.mobile-nav a:hover,.mobile-nav a.active{background:var(--blue-50);color:var(--blue);}
+
+/* ===== PAGES ===== */
+.page{display:none;padding-top:78px;min-height:100vh;}
+.page.active{display:block;}
+
+/* ===== DASHBOARD ===== */
+.dashboard-hero{padding:30px 0 10px;}
+.welcome-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:30px;}
+.welcome-bar h1{font-size:1.7rem;color:var(--blue-dark);}
+.welcome-bar h1 span{color:var(--gold);}
+.welcome-bar .today-badge{background:var(--blue-50);color:var(--blue);font-weight:700;font-size:0.85rem;padding:8px 16px;border-radius:50px;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:36px;}
+.stat-card{background:var(--card);border-radius:var(--radius);padding:22px 20px;box-shadow:var(--shadow);border:1px solid var(--border);transition:0.25s;}
+.stat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-hover);}
+.stat-card .stat-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:12px;}
+.stat-card .stat-icon.blue{background:var(--blue-100);color:var(--blue);}
+.stat-card .stat-icon.gold{background:var(--gold-50);color:var(--gold-dark);}
+.stat-card .stat-icon.green{background:#DCFCE7;color:#16A34A;}
+.stat-card .stat-icon.purple{background:#F3E8FF;color:#7C3AED;}
+.stat-card .stat-value{font-size:1.8rem;font-weight:800;color:var(--blue-dark);font-family:'Poppins';}
+.stat-card .stat-label{font-size:0.82rem;color:var(--muted);margin-top:2px;}
+.stat-card .stat-change{font-size:0.75rem;color:var(--success);font-weight:600;margin-top:4px;}
+
+.progress-section{margin-bottom:40px;}
+.progress-section h2{font-size:1.3rem;color:var(--blue-dark);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.progress-section h2 i{color:var(--gold);}
+.progress-bars{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
+.progress-bar-item{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border:1px solid var(--border);}
+.progress-bar-item .pb-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.progress-bar-item .pb-head h4{font-size:0.92rem;color:var(--text);}
+.progress-bar-item .pb-head span{font-weight:700;font-size:0.85rem;color:var(--blue);}
+.progress-bar-item .pb-track{width:100%;height:10px;background:var(--border);border-radius:10px;overflow:hidden;}
+.progress-bar-item .pb-fill{height:100%;border-radius:10px;transition:width 0.8s ease;}
+.progress-bar-item .pb-fill.blue{background:linear-gradient(90deg,var(--blue),var(--blue-light));}
+.progress-bar-item .pb-fill.gold{background:linear-gradient(90deg,var(--gold),var(--gold-dark));}
+.progress-bar-item .pb-fill.green{background:linear-gradient(90deg,var(--success),#34D399);}
+.progress-bar-item .pb-fill.purple{background:linear-gradient(90deg,#7C3AED,#A78BFA);}
+
+.month-tabs{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;justify-content:center;}
+.month-tab{background:var(--card);border:2px solid var(--border);padding:12px 24px;border-radius:50px;font-weight:700;font-size:0.9rem;color:var(--muted);transition:0.2s;}
+.month-tab:hover{border-color:var(--blue-light);color:var(--blue);}
+.month-tab.active{background:linear-gradient(135deg,var(--blue),var(--blue-dark));color:#fff;border-color:var(--blue);box-shadow:0 4px 14px rgba(37,99,235,0.3);}
+.month-desc{text-align:center;background:var(--blue-50);border:1px solid var(--blue-100);padding:14px 20px;border-radius:12px;margin-bottom:24px;font-size:0.92rem;color:var(--text);}
+.weeks-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:40px;}
+.week-card{background:var(--card);border-radius:var(--radius);padding:22px 16px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border);transition:0.25s;cursor:pointer;}
+.week-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-hover);border-color:var(--blue-light);}
+.week-card .wk-icon{font-size:1.6rem;color:var(--blue);margin-bottom:8px;}
+.week-card h4{color:var(--blue-dark);font-size:0.95rem;margin-bottom:6px;}
+.week-card .wk-info{font-size:0.78rem;color:var(--muted);margin-bottom:10px;}
+.week-card .wk-progress{font-size:0.75rem;color:var(--success);font-weight:600;margin-bottom:10px;}
+.week-card button{background:var(--blue);color:#fff;padding:9px 18px;border-radius:50px;font-weight:700;font-size:0.82rem;width:100%;transition:0.2s;}
+.week-card button:hover{background:var(--blue-dark);}
+
+/* ===== STUDY DAY MODAL ===== */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.6);z-index:2000;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#fff;border-radius:20px;max-width:900px;width:100%;max-height:90vh;overflow-y:auto;padding:30px;position:relative;}
+.modal-close{position:absolute;top:16px;right:16px;background:var(--bg);width:36px;height:36px;border-radius:50%;font-size:1.1rem;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:0.2s;}
+.modal-close:hover{background:#FEE2E2;color:var(--danger);}
+.modal-header{margin-bottom:24px;padding-right:40px;}
+.modal-header h3{color:var(--blue-dark);font-size:1.35rem;margin-bottom:4px;}
+.modal-header p{color:var(--muted);font-size:0.88rem;}
+.modal-progress{background:var(--blue-50);padding:12px 18px;border-radius:10px;margin-bottom:22px;display:flex;align-items:center;gap:14px;}
+.modal-progress .mp-bar{flex:1;height:8px;background:var(--border);border-radius:8px;overflow:hidden;}
+.modal-progress .mp-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--gold));border-radius:8px;transition:width 0.6s;}
+.modal-progress span{font-weight:700;font-size:0.85rem;color:var(--blue-dark);}
+
+.day-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;border-bottom:2px solid var(--border);padding-bottom:0;}
+.day-tab{background:none;padding:10px 16px;font-weight:600;font-size:0.82rem;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;transition:0.2s;}
+.day-tab:hover{color:var(--blue);}
+.day-tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.day-content{display:none;}
+.day-content.active{display:block;}
+.day-section{margin-bottom:24px;}
+.day-section .ds-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.day-section .ds-head .ds-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;}
+.day-section .ds-head .ds-icon.video{background:#DBEAFE;color:var(--blue);}
+.day-section .ds-head .ds-icon.quiz{background:#FEF3C7;color:var(--gold-dark);}
+.day-section .ds-head .ds-icon.summary{background:#DCFCE7;color:#16A34A;}
+.day-section .ds-head .ds-icon.materials{background:#F3E8FF;color:#7C3AED;}
+.day-section .ds-head h4{font-size:1rem;color:var(--blue-dark);}
+.day-section .ds-head .ds-check{margin-left:auto;}
+.ds-check label{display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--muted);font-weight:600;cursor:pointer;}
+.ds-check input{width:18px;height:18px;accent-color:var(--success);cursor:pointer;}
+
+.video-embed{width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;}
+.video-embed iframe{width:100%;height:100%;border:0;}
+.video-placeholder{width:100%;aspect-ratio:16/9;border-radius:12px;background:linear-gradient(135deg,var(--blue-dark),var(--blue));display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:10px;}
+.video-placeholder i{font-size:2.8rem;opacity:0.8;}
+.video-placeholder span{font-size:0.9rem;opacity:0.7;}
+
+.quiz-container{display:flex;flex-direction:column;gap:14px;}
+.quiz-question{background:var(--bg);border-radius:12px;padding:18px;border:1px solid var(--border);}
+.quiz-question .q-num{font-weight:800;color:var(--blue-dark);font-size:0.82rem;margin-bottom:6px;}
+.quiz-question .q-text{font-weight:600;font-size:0.92rem;margin-bottom:12px;color:var(--text);}
+.quiz-options{display:flex;flex-direction:column;gap:8px;}
+.quiz-option{display:flex;align-items:center;gap:10px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:0.2s;font-size:0.88rem;}
+.quiz-option:hover{border-color:var(--blue-light);background:var(--blue-50);}
+.quiz-option.selected{border-color:var(--blue);background:var(--blue-50);}
+.quiz-option.correct{border-color:var(--success);background:#DCFCE7;}
+.quiz-option.wrong{border-color:var(--danger);background:#FEE2E2;}
+.quiz-option .opt-letter{width:28px;height:28px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;flex-shrink:0;transition:0.2s;}
+.quiz-option.correct .opt-letter{background:var(--success);color:#fff;}
+.quiz-option.wrong .opt-letter{background:var(--danger);color:#fff;}
+.quiz-explanation{background:#EFF6FF;border-left:4px solid var(--blue);padding:12px 16px;border-radius:0 8px 8px 0;margin-top:10px;font-size:0.85rem;color:var(--blue-dark);display:none;}
+.quiz-explanation.show{display:block;}
+
+.summary-card{background:var(--bg);border-radius:12px;padding:20px;border:1px solid var(--border);}
+.summary-card h5{color:var(--blue-dark);font-size:0.95rem;margin-bottom:10px;}
+.summary-card p{font-size:0.88rem;color:var(--text);line-height:1.7;margin-bottom:10px;}
+.summary-card ul{padding-left:20px;}
+.summary-card ul li{font-size:0.85rem;color:var(--text);margin-bottom:6px;list-style:disc;}
+
+.materials-list{display:flex;flex-direction:column;gap:10px;}
+.material-item{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--bg);border-radius:10px;border:1px solid var(--border);transition:0.2s;cursor:pointer;}
+.material-item:hover{border-color:var(--blue-light);background:var(--blue-50);}
+.material-item i{font-size:1.2rem;color:var(--blue);}
+.material-item .mat-info{flex:1;}
+.material-item .mat-info strong{display:block;font-size:0.88rem;color:var(--text);}
+.material-item .mat-info span{font-size:0.78rem;color:var(--muted);}
+.material-item .mat-type{background:var(--blue-100);color:var(--blue);font-size:0.72rem;font-weight:700;padding:4px 10px;border-radius:50px;}
+
+/* ===== FOOTER ===== */
+.footer{background:#0F172A;color:#CBD5E1;padding:40px 0 20px;margin-top:60px;}
+.footer-inner{display:flex;justify-content:space-between;flex-wrap:wrap;gap:24px;max-width:1280px;margin:0 auto;padding:0 24px;}
+.footer-col h4{color:#fff;margin-bottom:10px;font-size:0.95rem;}
+.footer-col p,.footer-col a{font-size:0.82rem;color:#94A3B8;display:block;margin-bottom:6px;}
+.footer-bottom{border-top:1px solid #1E293B;padding-top:16px;text-align:center;font-size:0.78rem;color:#64748B;max-width:1280px;margin:0 auto;padding-left:24px;padding-right:24px;}
+
+/* ===== ANIMATIONS ===== */
+.fade-in{opacity:1;transform:translateY(0);}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.fade-in{animation:fadeSlideIn 0.5s ease both;}
+@keyframes fadeInScale{from{opacity:0;transform:scale(0.95);}to{opacity:1;transform:scale(1);}}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:1024px){
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .weeks-grid{grid-template-columns:repeat(2,1fr);}
+  .progress-bars{grid-template-columns:1fr;}
+}
+@media(max-width:768px){
+  .header-nav{display:none;}
+  .hamburger{display:block;}
+  .welcome-bar h1{font-size:1.3rem;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .weeks-grid{grid-template-columns:1fr;}
+  .modal-box{padding:20px;max-height:95vh;}
+  .day-tabs{gap:4px;}
+  .day-tab{padding:8px 10px;font-size:0.75rem;}
+  .auth-card{padding:30px 24px;}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr;}
+  .stat-card{padding:18px 16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== AUTH: LOGIN ===== -->
+<div id="loginScreen" class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <i class="fas fa-graduation-cap"></i>
+      <h1>APROVA <span style="color:var(--gold);">ENEM</span></h1>
+      <p>Plataforma de Estudos Inteligente</p>
+    </div>
+    <div class="auth-error" id="loginError"></div>
+    <form class="auth-form" id="loginForm" onsubmit="return doLogin(event)">
+      <div class="field">
+        <label><i class="fas fa-envelope" style="color:var(--blue);margin-right:6px;"></i> E-mail</label>
+        <input type="email" id="loginEmail" placeholder="seu@email.com" required>
+      </div>
+      <div class="field">
+        <label><i class="fas fa-lock" style="color:var(--blue);margin-right:6px;"></i> Senha</label>
+        <input type="password" id="loginPassword" placeholder="Sua senha" required>
+      </div>
+      <button class="auth-btn" type="submit"><i class="fas fa-arrow-right-to-bracket" style="margin-right:8px;"></i>Entrar</button>
+    </form>
+    <div class="auth-switch">
+      Não tem conta? <a onclick="showRegister()"><i class="fas fa-user-plus" style="margin-right:4px;"></i>Criar conta</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== AUTH: REGISTER ===== -->
+<div id="registerScreen" class="auth-wrapper" style="display:none;">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <i class="fas fa-graduation-cap"></i>
+      <h1>APROVA <span style="color:var(--gold);">ENEM</span></h1>
+      <p>Crie sua conta e comece a estudar</p>
+    </div>
+    <div class="auth-error" id="registerError"></div>
+    <form class="auth-form" id="registerForm" onsubmit="return doRegister(event)">
+      <div class="field">
+        <label><i class="fas fa-user" style="color:var(--blue);margin-right:6px;"></i> Nome completo</label>
+        <input type="text" id="regName" placeholder="Seu nome" required>
+      </div>
+      <div class="field">
+        <label><i class="fas fa-envelope" style="color:var(--blue);margin-right:6px;"></i> E-mail</label>
+        <input type="email" id="regEmail" placeholder="seu@email.com" required>
+      </div>
+      <div class="field">
+        <label><i class="fas fa-lock" style="color:var(--blue);margin-right:6px;"></i> Senha</label>
+        <input type="password" id="regPassword" placeholder="Mínimo 6 caracteres" required minlength="6">
+      </div>
+      <button class="auth-btn" type="submit"><i class="fas fa-user-plus" style="margin-right:8px;"></i>Criar conta</button>
+    </form>
+    <div class="auth-switch">
+      Já tem conta? <a onclick="showLogin()"><i class="fas fa-arrow-right-to-bracket" style="margin-right:4px;"></i>Fazer login</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="mainApp" style="display:none;">
+  <header class="app-header" id="appHeader">
+    <div class="header-inner">
+      <div class="header-logo">
+        <i class="fas fa-graduation-cap"></i>
+        APROVA<span>ENEM</span>
+      </div>
+      <nav class="header-nav">
+        <a href="#" class="active" data-page="dashboard" onclick="navigateTo('dashboard')"><i class="fas fa-gauge-high" style="margin-right:5px;color:var(--gold);"></i>Dashboard</a>
+        <a href="#" data-page="cronograma" onclick="navigateTo('cronograma')"><i class="fas fa-calendar-days" style="margin-right:5px;color:var(--gold);"></i>Cronograma</a>
+      </nav>
+      <div class="header-user">
+        <div class="avatar" id="userAvatar">?</div>
+        <span class="user-name" id="userName">Aluno</span>
+        <button class="logout-btn" onclick="doLogout()"><i class="fas fa-right-from-bracket"></i> Sair</button>
+      </div>
+      <button class="hamburger" onclick="toggleMobileNav()"><i class="fas fa-bars"></i></button>
+    </div>
+  </header>
+  <div class="mobile-nav" id="mobileNav">
+    <a href="#" class="active" data-page="dashboard" onclick="navigateTo('dashboard')"><i class="fas fa-gauge-high" style="margin-right:8px;color:var(--gold);"></i>Dashboard</a>
+    <a href="#" data-page="cronograma" onclick="navigateTo('cronograma')"><i class="fas fa-calendar-days" style="margin-right:8px;color:var(--gold);"></i>Cronograma</a>
+    <a href="#" onclick="doLogout()"><i class="fas fa-right-from-bracket" style="margin-right:8px;color:var(--danger);"></i>Sair</a>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div id="pageDashboard" class="page active">
+    <div class="container" style="max-width:1200px;margin:0 auto;padding:0 24px;">
+      <div class="dashboard-hero">
+        <div class="welcome-bar">
+          <h1>Olá, <span id="dashName">Aluno</span> <i class="fas fa-wand-magic-sparkles" style="color:var(--gold);font-size:1.2rem;"></i></h1>
+          <div class="today-badge"><i class="fas fa-calendar-day" style="margin-right:5px;"></i><span id="todayLabel"></span></div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card fade-in">
+          <div class="stat-icon blue"><i class="fas fa-calendar-check"></i></div>
+          <div class="stat-value" id="statDays">0</div>
+          <div class="stat-label">Dias estudados</div>
+          <div class="stat-change"><i class="fas fa-arrow-up"></i> Continue assim!</div>
+        </div>
+        <div class="stat-card fade-in">
+          <div class="stat-icon gold"><i class="fas fa-circle-check"></i></div>
+          <div class="stat-value" id="statActivities">0</div>
+          <div class="stat-label">Atividades concluídas</div>
+          <div class="stat-change"><i class="fas fa-fire" style="color:var(--gold);"></i> Mantenha o ritmo</div>
+        </div>
+        <div class="stat-card fade-in">
+          <div class="stat-icon green"><i class="fas fa-chart-line"></i></div>
+          <div class="stat-value" id="statProgress">0%</div>
+          <div class="stat-label">Progresso geral</div>
+          <div class="stat-change"><i class="fas fa-arrow-up"></i> Em evolução</div>
+        </div>
+        <div class="stat-card fade-in">
+          <div class="stat-icon purple"><i class="fas fa-clock-rotate-left"></i></div>
+          <div class="stat-value" id="statHours">0h</div>
+          <div class="stat-label">Horas de estudo</div>
+          <div class="stat-change"><i class="fas fa-star" style="color:var(--gold);"></i> Dedicação total</div>
+        </div>
+      </div>
+
+      <div class="progress-section fade-in">
+        <h2><i class="fas fa-chart-bar"></i> Progresso por matéria</h2>
+        <div class="progress-bars" id="progressBars"></div>
+      </div>
+
+      <div class="progress-section fade-in">
+        <h2><i class="fas fa-flag-checkered"></i> Cronograma</h2>
+        <div class="month-tabs" id="monthTabs"></div>
+        <div id="monthDesc"></div>
+        <div class="weeks-grid" id="weeksGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CRONOGRAMA PAGE -->
+  <div id="pageCronograma" class="page">
+    <div class="container" style="max-width:1200px;margin:0 auto;padding:0 24px;">
+      <div class="dashboard-hero">
+        <div class="welcome-bar">
+          <h1><i class="fas fa-calendar-days" style="color:var(--gold);"></i> Cronograma Completo</h1>
+          <div class="today-badge"><i class="fas fa-clock" style="margin-right:5px;"></i><span id="todayLabel2"></span></div>
+        </div>
+      </div>
+      <div class="month-tabs" id="cronoTabs"></div>
+      <div id="cronoMonthDesc"></div>
+      <div class="weeks-grid" id="cronoWeeksGrid"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <h4><i class="fas fa-graduation-cap" style="color:var(--gold);margin-right:6px;"></i> APROVA ENEM</h4>
+        <p>Sua plataforma de estudos completa para o ENEM.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Recursos</h4>
+        <a href="#">Dashboard</a>
+        <a href="#">Cronograma</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contato</h4>
+        <p><i class="fas fa-envelope" style="margin-right:5px;"></i>contato@aprovaenem.com.br</p>
+        <p><i class="fas fa-clock" style="margin-right:5px;"></i>Seg a sex, 9h às 18h</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Aprova ENEM. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+</div>
+
+<!-- ===== STUDY DAY MODAL ===== -->
+<div class="modal-overlay" id="studyModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeStudyModal()"><i class="fas fa-xmark"></i></button>
+    <div class="modal-header">
+      <h3 id="modalDayTitle">Segunda-feira</h3>
+      <p id="modalDaySubtitle">Mês 1 · Semana 1 — Matérias do dia</p>
+    </div>
+    <div class="modal-progress">
+      <span><i class="fas fa-chart-pie" style="margin-right:4px;"></i>Progresso do dia:</span>
+      <div class="mp-bar"><div class="mp-fill" id="modalProgressFill" style="width:0%"></div></div>
+      <span id="modalProgressPct">0%</span>
+    </div>
+    <div class="day-tabs" id="dayTabs"></div>
+    <div id="dayContents"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DADOS — VÍDEOS, QUESTÕES, RESUMOS, MATERIAIS
+   ============================================================ */
+
+const videoDB = {
+  mat:{
+    "Conjuntos numéricos":"n7_9QC8nqVc",
+    "Funções do 1º grau":"VHffkYPBv4g",
+    "Funções do 2º grau":"hgKTmAO-k7E",
+    "Proporcionalidade e regra de três":"MRhUqHl6P5U",
+    "Porcentagem e juros simples":"n7_9QC8nqVc",
+    "Razões e proporções":"MRhUqHl6P5U",
+    "Sistemas de equações":"VHffkYPBv4g",
+    "Geometria plana":"OFeFqTRgk5w",
+    "Geometria espacial":"OFeFqTRgk5w",
+    "Estatística básica":"BtJUA-4J40Y",
+    "Análise combinatória":"yX85jWp1gcQ",
+    "Probabilidade":"yX85jWp1gcQ",
+    "Funções exponenciais":"VHffkYPBv4g",
+    "Funções logarítmicas":"hgKTmAO-k7E",
+    "Progressão aritmética":"n7_9QC8nqVc",
+    "Progressão geométrica":"VHffkYPBv4g",
+    "Trigonometria":"hgKTmAO-k7E",
+    "Matrizes e determinantes":"OFeFqTRgk5w",
+    "Geometria analítica":"OFeFqTRgk5w",
+    "Juros compostos":"MRhUqHl6P5U",
+    "Gráficos e interpretação":"BtJUA-4J40Y"
+  },
+  port:{
+    "Interpretação de texto":"hrziAct5CZw",
+    "Funções da linguagem":"hrziAct5CZw",
+    "Figuras de linguagem":"Bg3f7Aecyi4",
+    "Gêneros textuais":"hrziAct5CZw",
+    "Coesão e coerência":"hc3bm0flJq0",
+    "Classes gramaticais":"hrziAct5CZw",
+    "Concordância":"hrziAct5CZw",
+    "Regência e crase":"hrziAct5CZw",
+    "Literatura: Romantismo":"Bg3f7Aecyi4",
+    "Literatura: Realismo":"Bg3f7Aecyi4",
+    "Modernismo":"Bg3f7Aecyi4",
+    "Variação linguística":"hrziAct5CZw",
+    "Intertextualidade":"hc3bm0flJq0",
+    "Textos argumentativos":"hc3bm0flJq0",
+    "Literatura brasileira":"Bg3f7Aecyi4"
+  },
+  hum:{
+    "Revolução Francesa":"8mhXAvP1Ats",
+    "Revolução Industrial":"8mhXAvP1Ats",
+    "Formação do território":"o8lKEd3lusI",
+    "Brasil Colônia":"8mhXAvP1Ats",
+    "Independência do Brasil":"8mhXAvP1Ats",
+    "Geografia do Brasil":"o8lKEd3lusI",
+    "Filosofia grega":"F6xFBRml2rY",
+    "Sociologia":"F6xFBRml2rY",
+    "Primeira Guerra":"8mhXAvP1Ats",
+    "Segunda Guerra":"8mhXAvP1Ats",
+    "Guerra Fria":"8mhXAvP1Ats",
+    "Era Vargas":"8mhXAvP1Ats",
+    "Ditadura Militar":"8mhXAvP1Ats",
+    "Globalização":"o8lKEd3lusI",
+    "Direitos humanos":"F6xFBRml2rY",
+    "Movimentos sociais":"F6xFBRml2rY"
+  },
+  nat:{
+    "Citologia":"f-MmxbFJ4NI",
+    "Ecologia":"7LG4D_USSrU",
+    "Física: cinemática":"BtJUA-4J40Y",
+    "Leis de Newton":"BtJUA-4J40Y",
+    "Estrutura atômica":"OFeFqTRgk5w",
+    "Tabela periódica":"OFeFqTRgk5w",
+    "Genética":"f-MmxbFJ4NI",
+    "Energia e trabalho":"BtJUA-4J40Y",
+    "Ligações químicas":"OFeFqTRgk5w",
+    "Sistemas do corpo":"f-MmxbFJ4NI",
+    "Funções inorgânicas":"OFeFqTRgk5w",
+    "Circuitos elétricos":"BtJUA-4J40Y",
+    "Funções orgânicas":"TiRiE0ym4pI",
+    "Estequiometria":"TiRiE0ym4pI",
+    "Evolução":"f-MmxbFJ4NI",
+    "Ondas e acústica":"BtJUA-4J40Y",
+    "Óptica":"BtJUA-4J40Y",
+    "Soluções":"TiRiE0ym4pI"
+  },
+  redacao:{
+    default:"Zr7OCekjD30"
+  }
+};
+
+const quizDB = {
+  mat:{
+    "Conjuntos numéricos":[
+      {q:"Qual dos conjuntos abaixo contém todos os números naturais?",opts:["Z","Q","N","R"],correct:2,expl:"N representa o conjunto dos números naturais: {0,1,2,3,...}"},
+      {q:"O número √2 pertence a qual conjunto?",opts:["Naturais","Inteiros","Racionais","Irracionais"],correct:3,expl:"√2 não pode ser escrito como fração, portanto é irracional."},
+      {q:"Qual operação NÃO é fechada nos naturais?",opts:["Adição","Multiplicação","Subtração","Potenciação"],correct:2,expl:"A subtração de dois naturais pode resultar em negativo, que não é natural."},
+      {q:"O conjunto dos inteiros é representado por qual letra?",opts:["N","Z","Q","R"],correct:1,expl:"Z (do alemão 'Zahlen') representa os inteiros: {...,-2,-1,0,1,2,...}"},
+      {q:"Quantos subconjuntos tem o conjunto A={a,b,c}?",opts:["4","6","8","16"],correct:2,expl:"O número de subconjuntos é 2^n = 2^3 = 8."}
+    ],
+    "Funções do 1º grau":[
+      {q:"A função f(x) = 2x + 3 é uma função do 1º grau. Qual seu coeficiente angular?",opts:["3","2","5","1"],correct:1,expl:"Na forma f(x) = ax + b, o coeficiente angular é 'a'. Aqui a = 2."},
+      {q:"Qual o valor de f(0) na função f(x) = 3x - 5?",opts:["3","0","-5","5"],correct:2,expl:"f(0) = 3(0) - 5 = -5. Este é o coeficiente linear."},
+      {q:"A função f(x) = -x + 4 é crescente ou decrescente?",opts:["Crescente","Decrescente","Constante","Impossível determinar"],correct:1,expl:"O coeficiente angular é negativo (-1), logo a função é decrescente."},
+      {q:"Qual o zero da função f(x) = 4x - 8?",opts:["1","2","4","8"],correct:1,expl:"4x - 8 = 0 → x = 2."},
+      {q:"O gráfico de f(x) = x é uma reta que passa por:",opts:["(0,1)","(1,0)","(0,0)","(2,1)"],correct:2,expl:"f(0) = 0, logo passa pela origem (0,0)."}
+    ]
+  },
+  port:{
+    "Interpretação de texto":[
+      {q:"Na frase 'O sol brilha intensamente', qual é o sujeito?",opts:["O sol","brilha","intensamente","O sol brilha"],correct:0,expl:"'O sol' é o sujeito simples que pratica a ação de brilhar."},
+      {q:"Qual figura de linguagem está em 'O tempo é dinheiro'?",opts:["Metáfora","Metonímia","Ironia","Hipérbole"],correct:0,expl:"Metáfora: comparação implícita entre tempo e dinheiro."},
+      {q:"Um texto dissertativo-argumentativo deve conter:",opts:["Apenas narração","Tese, argumentos e conclusão","Somente descrição","Diálogos entre personagens"],correct:1,expl:"A estrutura básica é: tese (posicionamento), argumentos (justificativas) e conclusão."},
+      {q:"O que caracteriza a coesão textual?",opts:["Uso de vocábulos raros","Conectores que ligam as ideias","Frases curtas","Uso de gírias"],correct:1,expl:"Coesão é a ligação entre orações e parágrafos por meio de conectivos."},
+      {q:"Qual alternativa apresenta um texto injuntivo?",opts:["Um poema","Uma receita culinária","Uma crônica","Uma novela"],correct:1,expl:"Textos injuntivos dão instruções, como receitas, manuais e regulamentos."}
+    ]
+  },
+  hum:{
+    "Revolução Francesa":[
+      {q:"Em que ano começou a Revolução Francesa?",opts:["1776","1789","1799","1815"],correct:1,expl:"A Revolução Francesa começou em 1789 com a Queda da Bastilha."},
+      {q:"Qual era o lema da Revolução Francesa?",opts:["Pão e paz","Liberdade, Igualdade e Fraternidade","Deus e Rei","Ordem e Progresso"],correct:1,expl:"'Liberdade, Igualdade e Fraternidade' era o lema revolucionário."},
+      {q:"A queda da Bastilha ocorreu em:",opts:["4 de julho","14 de julho","25 de dezembro","1 de maio"],correct:1,expl:"14 de julho de 1789 é o marco inicial da Revolução."},
+      {q:"Qual documento resultou da Revolução Francesa?",opts:["Magna Carta","Declaração dos Direitos do Homem","Constituição Americana","Tratado de Versalhes"],correct:1,expl:"A Declaração dos Direitos do Homem e do Cidadão foi proclamada em 1789."},
+      {q:"Napoleão Bonaparte tomou o poder em:",opts:["1789","1799","1804","1815"],correct:1,expl:"O golpe de 18 Brumário (1799) levou Napoleão ao poder."}
+    ]
+  },
+  nat:{
+    "Citologia":[
+      {q:"Qual organela é responsável pela produção de energia na célula?",opts:["Ribossomo","Mitocôndria","Lisossomo","Complexo de Golgi"],correct:1,expl:"A mitocôndria realiza a respiração celular, produzindo ATP."},
+      {q:"A membrana plasmática é composta principalmente por:",opts:["Carboidratos","Lipídios e proteínas","Ácidos nucleicos","Sais minerais"],correct:1,expl:"O modelo do mosaico fluido descreve a membrana como uma bicamada de fosfolipídios com proteínas."},
+      {q:"Qual organela realiza a fotossíntese?",opts:["Mitocôndria","Ribossomo","Cloroplasto","Retículo endoplasmático"],correct:2,expl:"Os cloroplastos contêm clorofila e realizam a fotossíntese."},
+      {q:"O núcleo celular contém:",opts:["Apenas água","DNA e nucleoplasma","Apenas proteínas","Apenas ribossomos"],correct:1,expl:"O núcleo abriga o DNA (material genético) e o nucleoplasma."},
+      {q:"Qual é a função dos ribossomos?",opts:["Digestão intracelular","Síntese de proteínas","Transporte de lipídios","Fotossíntese"],correct:1,expl:"Os ribossomos são responsáveis pela tradução do mRNA em proteínas."}
+    ]
+  }
+};
+
+const summaryDB = {
+  mat:{
+    "Conjuntos numéricos":"Os conjuntos numéricos formam a base de toda a matemática. N (naturais) inclui {0,1,2,...}; Z (inteiros) adiciona os negativos; Q (racionais) inclui frações; I (irracionais) números que não podem ser fração; e R (reais) engloba todos. Saber classificar números é essencial para resolver questões do ENEM.",
+    "Funções do 1º grau":"Uma função do 1º grau tem a forma f(x) = ax + b, onde 'a' é o coeficiente angular (inclinação) e 'b' é o coeficiente linear (intercepto no eixo y). Se a > 0, a função é crescente; se a < 0, é decrescente. O zero da função é x = -b/a."
+  },
+  port:{
+    "Interpretação de texto":"Interpretar textos exige: (1) leitura atenta para identificar o tema central; (2) reconhecimento de argumentos e opinião do autor; (3) identificação de ironia, metáforas e figuras de linguagem; (4) atenção ao contexto histórico-cultural. Nunca responda com base apenas em palavras-chave isoladas."
+  },
+  hum:{
+    "Revolução Francesa":"A Revolução Francesa (1789-1799) marcou o fim do absolutismo na França. Seus pilares: desigualdade social (3º estado oprimido), crise econômica, influência do Iluminismo e a Queda da Bastilha (14/jul/1789). Consequências: Declaração dos Direitos do Homem, fim dos privilégios feudais e ascensão de Napoleão."
+  },
+  nat:{
+    "Citologia":"A célula é a unidade fundamental da vida. Eucariontes possuem núcleo definido; procariontes, não. Organelas essenciais: mitocôndria (energia/ATP), ribossomos (proteínas), retículo endoplasmático (síntese e transporte), complexo de Golgi (empacotamento), lisossomos (digestão) e cloroplastos (fotossíntese, em vegetais)."
+  }
+};
+
+const materialsDB = {
+  mat:{
+    "Conjuntos numéricos":[
+      {title:"Resumo: Conjuntos Numéricos",type:"PDF",desc:"PDF completo com exercícios"},
+      {title:"Mapa Mental: N, Z, Q, I, R",type:"Imagem",desc:"Diagrama visual dos conjuntos"}
+    ],
+    "Funções do 1º grau":[
+      {title:"Resumo: Funções do 1º Grau",type:"PDF",desc:"Teoria + 30 questões resolvidas"},
+      {title:"Fórmulas Essenciais",type:"PDF",desc:"Fichário com todas as fórmulas"}
+    ]
+  },
+  port:{
+    "Interpretação de texto":[
+      {title:"Guia de Interpretação Textual",type:"PDF",desc:"Estratégias para o ENEM"},
+      {title:"Lista de Conectivos",type:"PDF",desc:"Coesão e coerência na prática"}
+    ]
+  },
+  hum:{
+    "Revolução Francesa":[
+      {title:"Resumo: Revolução Francesa",type:"PDF",desc:"Linha do tempo + conceitos-chave"},
+      {title:"Mapa Mental: Revolução",type:"Imagem",desc:"Diagrama visual completo"}
+    ]
+  },
+  nat:{
+    "Citologia":[
+      {title:"Resumo: Citologia",type:"PDF",desc:"Organelas e suas funções"},
+      {title:"Ficha de Revisão: Célula",type:"PDF",desc:"Conteúdo essencial para o ENEM"}
+    ]
+  }
+};
+
+/* ============================================================
+   TÓPICOS POR MÊS E MATÉRIA
+   ============================================================ */
+const topicPools = {
+  1:{
+    mat:["Conjuntos numéricos","Funções do 1º grau","Funções do 2º grau","Proporcionalidade e regra de três","Porcentagem e juros simples","Razões e proporções","Sistemas de equações","Geometria plana","Geometria espacial","Estatística básica","Análise combinatória","Probabilidade"],
+    port:["Interpretação de texto","Funções da linguagem","Figuras de linguagem","Gêneros textuais","Coesão e coerência","Classes gramaticais","Concordância","Regência e crase","Literatura: Romantismo","Literatura: Realismo","Modernismo","Variação linguística"],
+    hum:["Revolução Francesa","Revolução Industrial","Formação do território","Brasil Colônia","Independência do Brasil","Geografia do Brasil","Filosofia grega","Sociologia","Primeira Guerra","Segunda Guerra","Guerra Fria","Direitos humanos"],
+    nat:["Citologia","Ecologia","Física: cinemática","Leis de Newton","Estrutura atômica","Tabela periódica","Genética","Energia e trabalho","Ligações químicas","Sistemas do corpo","Funções inorgânicas","Estequiometria"]
+  },
+  2:{
+    mat:["Funções exponenciais","Funções logarítmicas","Progressão aritmética","Progressão geométrica","Trigonometria","Matrizes e determinantes","Geometria analítica","Juros compostos","Gráficos e interpretação","Probabilidade condicional"],
+    port:["Intertextualidade","Textos argumentativos","Literatura brasileira","Pontuação e sintaxe","Figuras de sintaxe","Textos publicitários","Charges e tirinhas","Gramática avançada","Estilo e norma culta","Língua estrangeira"],
+    hum:["Era Vargas","Ditadura Militar","Globalização","Urbanização e êxodo rural","Geopolítica contemporânea","Movimentos sociais","História da África","Questões ambientais","Cidadania","Redemocratização"],
+    nat:["Evolução","Circuitos elétricos","Funções orgânicas","Ondas e acústica","Óptica","Soluções","Termoquímica","Termologia","Fisiologia humana","Ecologia: impactos ambientais"]
+  },
+  3:{
+    mat:["Revisão de funções","Revisão de geometria","Revisão de estatística","Revisão de proporcionalidade","Simulado: matemática","Questões comentadas"],
+    port:["Revisão de literatura","Revisão de gramática","Revisão de interpretação","Simulado: linguagens","Questões comentadas","Revisão de língua estrangeira"],
+    hum:["Revisão de história do Brasil","Revisão de história geral","Revisão de geografia","Revisão de filosofia e sociologia","Simulado: humanas","Atualidades"],
+    nat:["Revisão de biologia","Revisão de física","Revisão de química","Simulado: natureza","Questões interdisciplinares","Revisão de fórmulas"]
+  }
+};
+
+const redTopics = ["Estrutura da redação","Como elaborar uma tese","Tipos de argumentos","Proposta de intervenção","Coesão textual na redação","Repertório sociocultural","Desinformação na internet","Saúde mental dos jovens","Desigualdade social e educação","Sustentabilidade","Valorização da cultura brasileira","Impactos da tecnologia"];
+
+const subjectNames = {mat:"Matemática",port:"Português",hum:"Humanas",nat:"Natureza"};
+const subjectIcons = {mat:"fa-square-root-variable",port:"fa-book-open",hum:"fa-landmark",nat:"fa-flask"};
+const subjectColors = {mat:"#2563EB",port:"#D97706",hum:"#7C3AED",nat:"#16A34A"};
+const subjectBgColors = {mat:"#DBEAFE",port:"#FEF3C7",hum:"#F3E8FF",nat:"#DCFCE7"};
+
+/* ============================================================
+   GERAÇÃO DO CRONOGRAMA
+   ============================================================ */
+let redCounter = 0;
+const schedule = {1:[],2:[],3:[]};
+
+function nextTopic(counters, phase, subject){
+  const pool = topicPools[phase][subject];
+  const idx = counters[subject] % pool.length;
+  counters[subject]++;
+  return pool[idx];
+}
+
+function buildActivities(phase, s1, t1, s2, t2){
+  if(phase===1){
+    return [
+      {type:"video",subject:s1,text:t1},
+      {type:"quiz",subject:s1,text:t1},
+      {type:"video",subject:s2,text:t2},
+      {type:"quiz",subject:s2,text:t2},
+      {type:"summary",subject:s1,text:t1},
+      {type:"summary",subject:s2,text:t2}
+    ];
+  } else if(phase===2){
+    return [
+      {type:"video",subject:s1,text:t1},
+      {type:"quiz",subject:s1,text:t1},
+      {type:"quiz",subject:s2,text:t2},
+      {type:"summary",subject:s1,text:t1},
+      {type:"summary",subject:s2,text:t2}
+    ];
+  } else {
+    return [
+      {type:"video",subject:s1,text:t1},
+      {type:"quiz",subject:s1,text:t1},
+      {type:"summary",subject:s2,text:t2}
+    ];
+  }
+}
+
+function buildRedActivities(phase){
+  const rt = redTopics[redCounter % redTopics.length];
+  redCounter++;
+  const vidId = videoDB.redacao.default;
+  return [
+    {type:"video",subject:"redacao",text:rt,vidId},
+    {type:"summary",subject:"redacao",text:rt},
+    {type:"materials",subject:"redacao",text:rt}
+  ];
+}
+
+function buildSimActivities(phase){
+  const rt = redTopics[redCounter % redTopics.length];
+  redCounter++;
+  return [
+    {type:"video",subject:"mat",text:"Revisão geral (Todas as áreas)"},
+    {type:"quiz",subject:"mat",text:"Simulado geral (Todas as áreas)"},
+    {type:"video",subject:"redacao",text:rt,vidId:videoDB.redacao.default},
+    {type:"summary",subject:"redacao",text:rt}
+  ];
+}
+
+for(let month=1; month<=3; month++){
+  const counters = {mat:0,port:0,hum:0,nat:0};
+  for(let week=1; week<=4; week++){
+    const days = [];
+    const dayNames = ["Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+    for(let d=0; d<6; d++){
+      let subjectsLabel, hours, activities;
+      if(d===0 || d===2){
+        const s1 = d===0 ? 'mat':'port';
+        const s2 = d===0 ? 'port':'mat';
+        const t1 = nextTopic(counters, month, s1);
+        const t2 = nextTopic(counters, month, s2);
+        subjectsLabel = subjectNames[s1] + " + " + subjectNames[s2];
+        hours = "2h";
+        activities = buildActivities(month, s1, t1, s2, t2);
+      } else if(d===1 || d===3){
+        const s1 = d===1 ? 'hum':'nat';
+        const s2 = d===1 ? 'nat':'hum';
+        const t1 = nextTopic(counters, month, s1);
+        const t2 = nextTopic(counters, month, s2);
+        subjectsLabel = subjectNames[s1] + " + " + subjectNames[s2];
+        hours = "2h";
+        activities = buildActivities(month, s1, t1, s2, t2);
+      } else if(d===4){
+        subjectsLabel = "Redação";
+        hours = "1h30";
+        activities = buildRedActivities(month);
+      } else {
+        subjectsLabel = "Simulado + Redação";
+        hours = "3h";
+        activities = buildSimActivities(month);
+      }
+      days.push({name:dayNames[d], hours, subjects:subjectsLabel, activities, dayIndex:d});
+    }
+    schedule[month].push({week, days});
+  }
+}
+
+/* ============================================================
+   AUTH SYSTEM
+   ============================================================ */
+function showRegister(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('registerScreen').style.display='flex';
+}
+function showLogin(){
+  document.getElementById('registerScreen').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+}
+function doLogin(e){
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
+  const errEl = document.getElementById('loginError');
+  if(!users[email]){
+    errEl.textContent='E-mail não encontrado. Crie uma conta.';
+    errEl.style.display='block';
+    return false;
+  }
+  if(users[email].password !== pass){
+    errEl.textContent='Senha incorreta. Tente novamente.';
+    errEl.style.display='block';
+    return false;
+  }
+  localStorage.setItem('aprova_current', email);
+  enterApp(email);
+  return false;
+}
+function doRegister(e){
+  e.preventDefault();
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPassword').value;
+  const errEl = document.getElementById('registerError');
+  if(pass.length < 6){
+    errEl.textContent='A senha deve ter pelo menos 6 caracteres.';
+    errEl.style.display='block';
+    return false;
+  }
+  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
+  if(users[email]){
+    errEl.textContent='Este e-mail já está cadastrado. Faça login.';
+    errEl.style.display='block';
+    return false;
+  }
+  users[email] = {name, password: pass};
+  localStorage.setItem('aprova_users', JSON.stringify(users));
+  localStorage.setItem('aprova_current', email);
+  enterApp(email);
+  return false;
+}
+function doLogout(){
+  localStorage.removeItem('aprova_current');
+  document.getElementById('mainApp').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginForm').reset();
+}
+function enterApp(email){
+  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
+  const user = users[email];
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('registerScreen').style.display='none';
+  document.getElementById('mainApp').style.display='block';
+  document.getElementById('userName').textContent = user.name.split(' ')[0];
+  document.getElementById('dashName').textContent = user.name.split(' ')[0];
+  document.getElementById('userAvatar').textContent = user.name.charAt(0).toUpperCase();
+  updateTodayLabel();
+  renderDashboard();
+}
+function checkAuth(){
+  const current = localStorage.getItem('aprova_current');
+  if(current){
+    const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
+    if(users[current]){
+      enterApp(current);
+    } else {
+      localStorage.removeItem('aprova_current');
+    }
+  }
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function navigateTo(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page'+page.charAt(0).toUpperCase()+page.slice(1)).classList.add('active');
+  document.querySelectorAll('.header-nav a, .mobile-nav a').forEach(a=>{
+    a.classList.toggle('active', a.dataset.page===page);
+  });
+  if(page==='cronograma') renderCronograma();
+  document.getElementById('mobileNav').classList.remove('open');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function toggleMobileNav(){
+  document.getElementById('mobileNav').classList.toggle('open');
+}
+
+/* ============================================================
+   PROGRESS SYSTEM
+   ============================================================ */
+const STORAGE_KEY = "aprova_progress_v2";
+function loadProgress(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY))||{}; }
+  catch(e){ return {}; }
+}
+function saveProgress(p){ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+let progress = loadProgress();
+
+function activityId(month, week, dayIdx, actIdx){
+  return "m"+month+"-w"+week+"-d"+dayIdx+"-a"+actIdx;
+}
+function activityType(month, week, dayIdx, actIdx){
+  return "m"+month+"-w"+week+"-d"+dayIdx+"-a"+actIdx+"-type";
+}
+function activityAnswer(month, week, dayIdx, actIdx){
+  return "m"+month+"-w"+week+"-d"+dayIdx+"-a"+actIdx+"-ans";
+}
+function dayCompleted(month, week, dayIdx){
+  const w = schedule[month].find(x=>x.week===week);
+  const day = w.days[dayIdx];
+  const total = day.activities.length;
+  let done = 0;
+  day.activities.forEach((act,aIdx)=>{
+    if(progress[activityId(month,week,dayIdx,aIdx)]) done++;
+  });
+  return {total, done, pct: total ? Math.round((done/total)*100) : 0};
+}
+function countTotals(){
+  let total=0, done=0, daysStudied=0, hours=0;
+  for(let m=1;m<=3;m++){
+    schedule[m].forEach(w=>{
+      w.days.forEach((day,dIdx)=>{
+        let dayDone = 0;
+        day.activities.forEach((act,aIdx)=>{
+          total++;
+          if(progress[activityId(m,w.week,dIdx,aIdx)]){ done++; dayDone++; }
+        });
+        if(dayDone > 0) daysStudied++;
+      });
+    });
+  }
+  hours = Math.round(daysStudied * 2);
+  return {total, done, daysStudied, hours, pct: total ? Math.round((done/total)*100) : 0};
+}
+function subjectProgress(){
+  const subjects = {mat:{total:0,done:0},port:{total:0,done:0},hum:{total:0,done:0},nat:{total:0,done:0},redacao:{total:0,done:0}};
+  for(let m=1;m<=3;m++){
+    schedule[m].forEach(w=>{
+      w.days.forEach((day,dIdx)=>{
+        day.activities.forEach((act,aIdx)=>{
+          const key = act.subject || act.subject;
+          if(subjects[key]){
+            subjects[key].total++;
+            if(progress[activityId(m,w.week,dIdx,aIdx)]) subjects[key].done++;
+          }
+        });
+      });
+    });
+  }
+  return subjects;
+}
+
+/* ============================================================
+   RENDER DASHBOARD
+   ============================================================ */
+function updateTodayLabel(){
+  const now = new Date();
+  const opts = {weekday:'long', day:'numeric', month:'long'};
+  const label = now.toLocaleDateString('pt-BR', opts);
+  document.getElementById('todayLabel').textContent = label.charAt(0).toUpperCase()+label.slice(1);
+  document.getElementById('todayLabel2').textContent = label.charAt(0).toUpperCase()+label.slice(1);
+}
+
+function renderDashboard(){
+  const totals = countTotals();
+  document.getElementById('statDays').textContent = totals.daysStudied;
+  document.getElementById('statActivities').textContent = totals.done;
+  document.getElementById('statProgress').textContent = totals.pct + '%';
+  document.getElementById('statHours').textContent = totals.hours + 'h';
+
+  const sp = subjectProgress();
+  const pbWrap = document.getElementById('progressBars');
+  pbWrap.innerHTML = '';
+  const subjects = [
+    {key:'mat',name:'Matemática',color:'blue'},
+    {key:'port',name:'Português',color:'gold'},
+    {key:'hum',name:'Ciências Humanas',color:'purple'},
+    {key:'nat',name:'Ciências da Natureza',color:'green'}
+  ];
+  subjects.forEach(s=>{
+    const d = sp[s.key];
+    const pct = d.total ? Math.round((d.done/d.total)*100) : 0;
+    pbWrap.innerHTML += `
+      <div class="progress-bar-item">
+        <div class="pb-head">
+          <h4><i class="fas ${subjectIcons[s.key]}" style="color:${subjectColors[s.key]};margin-right:6px;"></i>${s.name}</h4>
+          <span>${pct}%</span>
+        </div>
+        <div class="pb-track"><div class="pb-fill ${s.color}" style="width:${pct}%"></div></div>
+      </div>
+    `;
+  });
+
+  renderMonthTabs('monthTabs','monthDesc','weeksGrid');
+  // observer.observeAll(); // removed - using CSS animation instead
+}
+
+const monthLabels = {
+  1:"<i class='fas fa-book' style='color:var(--blue);margin-right:6px;'></i><strong>Mês 1</strong> — Base teórica: vídeo aulas e exercícios de fixação para construir o fundamento de todas as matérias.",
+  2:"<i class='fas fa-layer-group' style='color:var(--gold);margin-right:6px;'></i><strong>Mês 2</strong> — Aprofundamento: conteúdos avançados com exercícios em nível ENEM e temas complexos.",
+  3:"<i class='fas fa-rotate' style='color:var(--success);margin-right:6px;'></i><strong>Mês 3</strong> — Revisão intensiva: questões comentadas, simulados completos e estratégias de prova."
+};
+
+function renderMonthTabs(tabsId, descId, gridId){
+  const tabsWrap = document.getElementById(tabsId);
+  const descEl = document.getElementById(descId);
+  const gridEl = document.getElementById(gridId);
+  tabsWrap.innerHTML = '';
+  for(let m=1;m<=3;m++){
+    const btn = document.createElement('button');
+    btn.className = 'month-tab' + (m===1?' active':'');
+    btn.dataset.month = m;
+    const icon = m===1?'fa-book-open':m===2?'fa-layer-group':'fa-rotate';
+    btn.innerHTML = `<i class="fas ${icon}" style="margin-right:5px;"></i>Mês ${m}`;
+    btn.onclick = ()=>{
+      tabsWrap.querySelectorAll('.month-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      descEl.innerHTML = monthLabels[m];
+      gridEl.innerHTML = '';
+      renderWeeks(m, gridId);
+    };
+    tabsWrap.appendChild(btn);
+  }
+  descEl.innerHTML = monthLabels[1];
+  descEl.className = 'month-desc';
+  renderWeeks(1, gridId);
+}
+
+function renderWeeks(month, gridId){
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '';
+  schedule[month].forEach(w=>{
+    let totalD=0, doneD=0;
+    w.days.forEach((day,dIdx)=>{
+      const dc = dayCompleted(month,w.week,dIdx);
+      totalD += dc.total;
+      doneD += dc.done;
+    });
+    const pct = totalD ? Math.round((doneD/totalD)*100) : 0;
+    const card = document.createElement('div');
+    card.className = 'week-card fade-in';
+    card.innerHTML = `
+      <div class="wk-icon"><i class="fas fa-calendar-week"></i></div>
+      <h4>Semana ${w.week}</h4>
+      <div class="wk-info">Segunda a sábado · 6 dias</div>
+      <div class="wk-progress"><i class="fas fa-check-circle" style="margin-right:3px;"></i>${doneD}/${totalD} atividades</div>
+      <button onclick="openWeekModal(${month},${w.week})"><i class="fas fa-eye" style="margin-right:4px;"></i>Abrir semana</button>
+    `;
+    grid.appendChild(card);
+  });
+  // observer.observe(el); // removed - using CSS animation instead
+}
+
+/* ============================================================
+   CRONOGRAMA PAGE
+   ============================================================ */
+function renderCronograma(){
+  renderMonthTabs('cronoTabs','cronoMonthDesc','cronoWeeksGrid');
+}
+
+/* ============================================================
+   STUDY DAY MODAL
+   ============================================================ */
+let currentModalData = null;
+
+function openWeekModal(month, week){
+  const w = schedule[month].find(x=>x.week===week);
+  currentModalData = {month, week, days: w.days};
+  
+  document.getElementById('modalDayTitle').textContent = `Mês ${month} · Semana ${week}`;
+  document.getElementById('modalDaySubtitle').textContent = `Segunda a sábado — marque as atividades conforme for concluindo`;
+
+  const dayTabs = document.getElementById('dayTabs');
+  dayTabs.innerHTML = '';
+  const dayContents = document.getElementById('dayContents');
+  dayContents.innerHTML = '';
+
+  w.days.forEach((day, dIdx)=>{
+    const tab = document.createElement('button');
+    tab.className = 'day-tab' + (dIdx===0?' active':'');
+    tab.textContent = day.name;
+    tab.dataset.dayIdx = dIdx;
+    tab.onclick = ()=>{
+      dayTabs.querySelectorAll('.day-tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      dayContents.querySelectorAll('.day-content').forEach(c=>c.classList.remove('active'));
+      document.getElementById('dayContent-'+dIdx).classList.add('active');
+    };
+    dayTabs.appendChild(tab);
+
+    const content = document.createElement('div');
+    content.className = 'day-content' + (dIdx===0?' active':'');
+    content.id = 'dayContent-'+dIdx;
+
+    // Day info
+    content.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:12px 16px;background:var(--blue-50);border-radius:10px;">
+        <i class="fas fa-clock" style="color:var(--blue);"></i>
+        <span style="font-weight:600;font-size:0.88rem;">${day.hours}</span>
+        <span style="color:var(--muted);font-size:0.82rem;margin-left:8px;">${day.subjects}</span>
+      </div>
+    `;
+
+    // Render activities
+    day.activities.forEach((act, aIdx)=>{
+      const actId = activityId(month, week, dIdx, aIdx);
+      const isChecked = progress[actId] ? true : false;
+      content.appendChild(renderActivity(month, week, dIdx, aIdx, act, isChecked));
+    });
+
+    dayContents.appendChild(content);
+  });
+
+  document.getElementById('studyModal').classList.add('open');
+  updateModalProgress();
+}
+
+function renderActivity(month, week, dIdx, aIdx, act, isChecked){
+  const actId = activityId(month, week, dIdx, aIdx);
+  const div = document.createElement('div');
+  div.className = 'day-section fade-in visible';
+
+  if(act.type === 'video'){
+    const vidKey = act.subject === 'redacao' ? 'default' : act.text;
+    const vidId = act.vidId || (videoDB[act.subject] && videoDB[act.subject][vidKey]) || '';
+    div.innerHTML = `
+      <div class="ds-head">
+        <div class="ds-icon video"><i class="fas fa-tv"></i></div>
+        <h4>Videoaula: ${act.text} <span style="color:var(--muted);font-weight:400;font-size:0.82rem;">(${subjectNames[act.subject]||'Redação'})</span></h4>
+        <div class="ds-check"><label><input type="checkbox" ${isChecked?'checked':''} onchange="toggleActivity('${actId}',this.checked)"><i class="fas fa-check-circle" style="color:var(--success);"></i> Assistido</label></div>
+      </div>
+      ${vidId ? `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${vidId}" allowfullscreen loading="lazy"></iframe></div>` : `<div class="video-placeholder"><i class="fas fa-play-circle"></i><span>Videoaula sobre "${act.text}"</span></div>`}
+    `;
+  } else if(act.type === 'quiz'){
+    const quizKey = act.text;
+    const questions = (quizDB[act.subject] && quizDB[act.subject][quizKey]) || generateFallbackQuiz(act.subject, quizKey);
+    let quizHtml = `<div class="ds-head"><div class="ds-icon quiz"><i class="fas fa-pen-to-square"></i></div><h4>Exercícios: ${act.text} <span style="color:var(--muted);font-weight:400;font-size:0.82rem;">(${subjectNames[act.subject]||''})</span></h4><div class="ds-check"><label><input type="checkbox" ${isChecked?'checked':''} onchange="toggleActivity('${actId}',this.checked)"><i class="fas fa-check-circle" style="color:var(--success);"></i> Concluído</label></div></div><div class="quiz-container">`;
+    questions.forEach((q,qIdx)=>{
+      const savedAns = progress[activityAnswer(month,week,dIdx,aIdx+'-'+qIdx)];
+      const answered = savedAns !== undefined;
+      quizHtml += `
+        <div class="quiz-question" id="quiz-${actId}-${qIdx}">
+          <div class="q-num"><i class="fas fa-question-circle" style="color:var(--gold);margin-right:4px;"></i>Questão ${qIdx+1}</div>
+          <div class="q-text">${q.q}</div>
+          <div class="quiz-options">
+      `;
+      const letters = ['A','B','C','D','E'];
+      q.opts.forEach((opt,oIdx)=>{
+        let cls = '';
+        if(answered){
+          if(oIdx === q.correct) cls = 'correct';
+          else if(oIdx === parseInt(savedAns) && oIdx !== q.correct) cls = 'wrong';
+        }
+        quizHtml += `
+          <div class="quiz-option ${cls}" onclick="answerQuiz('${actId}',${aIdx},${qIdx},${oIdx},${q.correct},'${actId}-${qIdx}')">
+            <div class="opt-letter">${letters[oIdx]}</div>
+            <span>${opt}</span>
+          </div>
+        `;
+      });
+      quizHtml += `</div>`;
+      if(answered){
+        const expl = q.expl || "Revise o conteúdo e tente novamente na próxima revisão.";
+        quizHtml += `<div class="quiz-explanation show"><i class="fas fa-lightbulb" style="color:var(--gold);margin-right:6px;"></i>${expl}</div>`;
+      }
+      quizHtml += `</div>`;
+    });
+    quizHtml += '</div>';
+    div.innerHTML = quizHtml;
+  } else if(act.type === 'summary'){
+    const sumKey = act.text;
+    const summary = (summaryDB[act.subject] && summaryDB[act.subject][sumKey]) || `Este é um resumo sobre "${act.text}". Estude os conceitos principais, faça anotações e revise os pontos-chave para fixar o conteúdo na memória de longo prazo. Pratique com exercícios e simulados para consolidar o aprendizado.`;
+    div.innerHTML = `
+      <div class="ds-head">
+        <div class="ds-icon summary"><i class="fas fa-file-lines"></i></div>
+        <h4>Resumo: ${act.text}</h4>
+        <div class="ds-check"><label><input type="checkbox" ${isChecked?'checked':''} onchange="toggleActivity('${actId}',this.checked)"><i class="fas fa-check-circle" style="color:var(--success);"></i> Lido</label></div>
+      </div>
+      <div class="summary-card">
+        <h5><i class="fas fa-book-bookmark" style="color:var(--blue);margin-right:6px;"></i>Resumo do conteúdo</h5>
+        <p>${summary}</p>
+      </div>
+    `;
+  } else if(act.type === 'materials'){
+    const mats = (materialsDB[act.subject] && materialsDB[act.subject][act.text]) || [
+      {title:"Material de apoio",type:"PDF",desc:"Conteúdo complementar"},
+      {title:"Exercícios extras",type:"PDF",desc:"Pratique mais"}
+    ];
+    let matHtml = `<div class="ds-head"><div class="ds-icon materials"><i class="fas fa-folder-open"></i></div><h4>Materiais extras</h4></div><div class="materials-list">`;
+    mats.forEach(m=>{
+      matHtml += `
+        <div class="material-item">
+          <i class="fas ${m.type==='PDF'?'fa-file-pdf':'fa-image'}"></i>
+          <div class="mat-info"><strong>${m.title}</strong><span>${m.desc}</span></div>
+          <span class="mat-type">${m.type}</span>
+        </div>
+      `;
+    });
+    matHtml += '</div>';
+    div.innerHTML = matHtml;
+  }
+
+  return div;
+}
+
+function generateFallbackQuiz(subject, topic){
+  return [
+    {q:`Sobre "${topic}" (${subjectNames[subject]}): qual alternativa está correta?`,opts:["Alternativa A (incorreta)","Alternativa B (correta)","Alternativa C (incorreta)","Alternativa D (incorreta)"],correct:1,expl:`O conteúdo sobre "${topic}" é fundamental para o ENEM. Revise os conceitos principais e pratique com questões de provas anteriores.`},
+    {q:`Qual é a aplicação mais importante de "${topic}" no ENEM?`,opts:["Memorização pura","Análise crítica e resolução de problemas","Apenas leitura do texto","Ignorar o conteúdo"],correct:1,expl:`O ENEM prioriza a capacidade de análise e resolução de problemas sobre o tema.`},
+    {q:`Para dominar "${topic}", você deve:`,opts:["Apenas assistir à aula","Assistir aula, resolver exercícios e revisar","Pular esta matéria","Confiar na sorte"],correct:1,expl:`A combinação de teoria + prática + revisão é a fórmula para a aprovação.`},
+    {q:`"${topic}" aparece com frequência no ENEM porque:`,opts:["É um tema fácil","Relaciona-se com situações do cotidiano","Não aparece no ENEM","É o tema mais cobrado"],correct:1,expl:`O ENEM prioriza temas que se relacionam com o cotidiano e a cidadania.`},
+    {q:`A melhor estratégia para estudar "${topic}" é:`,opts:["Estudar tudo de uma vez","Distribuir o estudo ao longo de semanas","Não estudar","Deixar para a véspera"],correct:1,expl:`A distribuição espaçada do estudo (spaced repetition) é a técnica mais eficaz para retenção.`}
+  ];
+}
+
+function toggleActivity(id, checked){
+  progress[id] = checked;
+  saveProgress(progress);
+  updateModalProgress();
+  if(document.getElementById('pageDashboard').classList.contains('active')) renderDashboard();
+  if(document.getElementById('pageCronograma').classList.contains('active')) renderCronograma();
+}
+
+function answerQuiz(actId, aIdx, qIdx, selected, correct, elementId){
+  const key = activityAnswer(actId, aIdx+'-'+qIdx);
+  if(progress[key] !== undefined) return; // already answered
+  progress[key] = String(selected);
+  saveProgress(progress);
+
+  const el = document.getElementById('quiz-'+elementId);
+  if(!el) return;
+  const opts = el.querySelectorAll('.quiz-option');
+  opts.forEach((opt, idx)=>{
+    if(idx === correct) opt.classList.add('correct');
+    if(idx === selected && idx !== correct) opt.classList.add('wrong');
+  });
+  const quizData = getQuizData(actId, qIdx);
+  if(quizData && quizData.expl){
+    const explDiv = el.querySelector('.quiz-explanation');
+    if(explDiv){ explDiv.classList.add('show'); }
+  }
+
+  // Mark quiz as completed if all questions answered
+  checkQuizCompletion(actId);
+  updateModalProgress();
+}
+
+function getQuizData(actId, qIdx){
+  // Find the quiz question data
+  if(!currentModalData) return null;
+  const {month, week, days} = currentModalData;
+  for(const day of days){
+    for(let aIdx=0; aIdx<day.activities.length; aIdx++){
+      const aid = activityId(month, week, day.dayIndex, aIdx);
+      if(aid === actId && day.activities[aIdx].type === 'quiz'){
+        const quizKey = day.activities[aIdx].text;
+        const sub = day.activities[aIdx].subject;
+        const qs = (quizDB[sub] && quizDB[sub][quizKey]) || generateFallbackQuiz(sub, quizKey);
+        return qs[qIdx] || null;
+      }
+    }
+  }
+  return null;
+}
+
+function checkQuizCompletion(actId){
+  if(!currentModalData) return;
+  const {month, week, days} = currentModalData;
+  for(const day of days){
+    for(let aIdx=0; aIdx<day.activities.length; aIdx++){
+      const aid = activityId(month, week, day.dayIndex, aIdx);
+      if(aid === actId && day.activities[aIdx].type === 'quiz'){
+        const quizKey = day.activities[aIdx].text;
+        const sub = day.activities[aIdx].subject;
+        const qs = (quizDB[sub] && quizDB[sub][quizKey]) || generateFallbackQuiz(sub, quizKey);
+        let allAnswered = true;
+        qs.forEach((q,qIdx)=>{
+          if(progress[activityAnswer(actId, aIdx+'-'+qIdx)] === undefined) allAnswered = false;
+        });
+        if(allAnswered){
+          progress[actId] = true;
+          saveProgress(progress);
+          // Check the checkbox
+          const dayContent = document.getElementById('dayContent-'+day.dayIndex);
+          if(dayContent){
+            const cb = dayContent.querySelector(`input[onchange*="'${actId}'"]`);
+            if(cb) cb.checked = true;
+          }
+        }
+        break;
+      }
+    }
+  }
+}
+
+function updateModalProgress(){
+  if(!currentModalData) return;
+  const {month, week, days} = currentModalData;
+  let total = 0, done = 0;
+  days.forEach(day=>{
+    day.activities.forEach((act,aIdx)=>{
+      total++;
+      const id = activityId(month, week, day.dayIndex, aIdx);
+      if(progress[id]) done++;
+    });
+  });
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById('modalProgressFill').style.width = pct + '%';
+  document.getElementById('modalProgressPct').textContent = pct + '%';
+}
+
+function closeStudyModal(){
+  document.getElementById('studyModal').classList.remove('open');
+  currentModalData = null;
+}
+
+/* ============================================================
+   SCROLL & OBSERVER
+   ============================================================ */
+const observer = {
+  observeAll(){
+    document.querySelectorAll('.fade-in:not(.visible)').forEach(el=>{
+      this.obs.observe(el);
+    });
+  }
+};
+observer.obs = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){ entry.target.classList.add('visible'); }
+  });
+},{threshold:0.1});
+
+window.addEventListener('scroll',()=>{
+  const header = document.getElementById('appHeader');
+  if(header) header.classList.toggle('scrolled', window.scrollY > 10);
+});
+
+document.getElementById('studyModal').addEventListener('click',(e)=>{
+  if(e.target === document.getElementById('studyModal')) closeStudyModal();
+});
+document.addEventListener('keydown',(e)=>{
+  if(e.key === 'Escape') closeStudyModal();
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+checkAuth();
+</script>
+</body>
+</html>
