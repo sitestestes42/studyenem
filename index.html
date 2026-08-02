@@ -1488,7 +1488,7 @@ function doAdminLogin(e){
   const pass = document.getElementById('adminPass').value;
   const errEl = document.getElementById('adminError');
   // Default admin credentials
-  const adminUsers = JSON.parse(localStorage.getItem('aprova_admins')||'{"admin":"admin123"}');
+  const adminUsers = JSON.parse(localStorage.getItem('aprova_admins')||'{"02n01":"04n01"}');
   if(adminUsers[user] && adminUsers[user] === pass){
     errEl.style.display='none';
     enterAdmin();
