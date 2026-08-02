@@ -298,6 +298,52 @@ input,textarea,select{font-family:inherit;}
 @keyframes toastIn{from{opacity:0;transform:translateX(50px);}to{opacity:1;transform:translateX(0);}}
 @keyframes toastOut{from{opacity:1;transform:translateX(0);}to{opacity:0;transform:translateX(50px);}}
 
+/* ===== MOBILE MENU (hambúrguer) ===== */
+.mobile-menu-btn{display:none;width:36px;height:36px;border-radius:8px;background:var(--blue-50);color:var(--blue-dark);align-items:center;justify-content:center;font-size:1.05rem;}
+.mobile-nav{display:none;flex-direction:column;background:#fff;border-top:1px solid var(--border);padding:8px 16px;}
+.mobile-nav.open{display:flex;}
+.mobile-nav a{padding:12px 4px;font-size:0.92rem;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+.mobile-nav a:last-child{border-bottom:none;}
+.mobile-nav a.active{color:var(--blue-dark);}
+.mobile-nav a i{color:var(--gold);}
+
+/* ===== CRONÔMETRO DE ESTUDO ===== */
+.timer-card{background:var(--card);border-radius:var(--radius);padding:18px 20px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:24px;}
+.timer-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+.timer-subject label{display:block;font-size:0.78rem;font-weight:600;color:var(--muted);margin-bottom:6px;}
+.timer-subject select{padding:9px 12px;border:2px solid var(--border);border-radius:8px;font-size:0.88rem;background:#fff;outline:none;min-width:200px;}
+.timer-subject select:focus{border-color:var(--blue);}
+.timer-display{font-family:'Poppins',sans-serif;font-size:2.1rem;font-weight:800;color:var(--blue-dark);letter-spacing:1px;}
+.timer-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.timer-btn{padding:10px 18px;border-radius:8px;font-size:0.85rem;font-weight:600;background:var(--blue-50);color:var(--blue);transition:0.2s;display:flex;align-items:center;gap:6px;}
+.timer-btn:hover{background:var(--blue-100);}
+.timer-btn.primary{background:var(--blue-dark);color:#fff;}
+.timer-btn.primary:hover{background:var(--blue);}
+.timer-btn.success{background:var(--success-bg);color:#059669;}
+.timer-btn.success:hover{background:var(--success);color:#fff;}
+
+/* ===== NOTIFICAÇÕES (.notification) ===== */
+.notification-container{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:400;display:flex;flex-direction:column;gap:8px;width:100%;max-width:420px;padding:0 16px;}
+.notification{background:#fff;border-radius:10px;padding:12px 16px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:10px;font-size:0.85rem;border-left:4px solid var(--blue);animation:toastIn 0.3s ease;}
+.notification-success{border-left-color:var(--success);}
+.notification-error{border-left-color:var(--danger);}
+.notification-info{border-left-color:var(--blue);}
+.notification-msg{flex:1;}
+.notification-close{background:none;color:var(--muted);font-size:0.9rem;padding:2px;}
+.notification-close:hover{color:var(--danger);}
+
+/* ===== RANKING ===== */
+.ranking-type-tabs{display:flex;gap:8px;justify-content:center;margin-bottom:20px;}
+.ranking-type-btn{padding:10px 22px;border-radius:50px;font-size:0.88rem;font-weight:600;background:var(--card);border:2px solid var(--border);color:var(--muted);transition:0.2s;display:flex;align-items:center;gap:6px;}
+.ranking-type-btn.active{background:var(--blue-dark);color:#fff;border-color:var(--blue-dark);}
+.ranking-type-btn:hover:not(.active){border-color:var(--blue);color:var(--blue);}
+.ranking-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:10px 20px;}
+.ranking-row{display:flex;align-items:center;gap:16px;padding:14px 6px;border-bottom:1px solid var(--border);}
+.ranking-row:last-child{border-bottom:none;}
+.ranking-pos{width:32px;display:flex;align-items:center;justify-content:center;}
+.ranking-name{flex:1;font-weight:600;font-size:0.92rem;color:var(--text);}
+.ranking-metric{font-size:0.82rem;color:var(--muted);font-weight:600;display:flex;align-items:center;}
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:1024px){
   .stats-grid{grid-template-columns:repeat(2,1fr);}
@@ -317,10 +363,52 @@ input,textarea,select{font-family:inherit;}
   .user-table{font-size:0.78rem;}
   .user-table th,.user-table td{padding:8px 10px;}
 }
+
+/* ----- Tablet (max-width: 768px) ----- */
+@media(max-width:768px){
+  .header-nav{display:none;}
+  .mobile-menu-btn{display:flex;}
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .weeks-grid{grid-template-columns:repeat(2,1fr);}
+  .progress-bars{grid-template-columns:1fr;}
+  .subjects-progress{grid-template-columns:repeat(3,1fr);}
+  .admin-stats{grid-template-columns:repeat(2,1fr);}
+  .container{padding:0 18px;}
+  .timer-top{flex-direction:column;align-items:flex-start;}
+  .timer-display{font-size:1.7rem;}
+}
+
+/* ----- Mobile (max-width: 480px) ----- */
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr;}
+  .weeks-grid{grid-template-columns:1fr;}
+  .month-tabs{flex-direction:column;align-items:stretch;}
+  .month-tab{justify-content:center;}
+  .header-inner{padding:0 14px;height:56px;}
+  .header-logo{font-size:1.05rem;}
+  .user-name{display:none;}
+  .container{padding:0 14px;}
+  .welcome-bar h1{font-size:1.25rem;}
+  .dashboard-hero{margin-bottom:16px;}
+  .timer-card{padding:14px;}
+  .timer-display{font-size:1.4rem;}
+  .timer-actions{flex-direction:column;}
+  .timer-btn{width:100%;justify-content:center;}
+  .ranking-type-tabs{flex-direction:column;}
+  .ranking-row{flex-wrap:wrap;gap:8px;}
+  .ranking-name{width:100%;order:1;}
+  .notification-container{max-width:calc(100% - 20px);}
+  .modal-box{max-width:100%;}
+  .day-tabs{overflow-x:auto;flex-wrap:nowrap;}
+  .quiz-option{font-size:0.82rem;}
+  .admin-stats{grid-template-columns:1fr;}
+  .admin-content{padding:16px;}
+}
 </style>
 </head>
 <body>
 <div class="toast-container" id="toastContainer"></div>
+<div class="notification-container" id="notificationContainer"></div>
 
 <!-- ===== AUTH: LOGIN ===== -->
 <div id="loginScreen" class="auth-wrapper">
@@ -411,12 +499,24 @@ input,textarea,select{font-family:inherit;}
         <a href="#" class="active" data-page="dashboard" onclick="navigateTo('dashboard')"><i class="fas fa-gauge-high" style="color:var(--gold);"></i>Dashboard</a>
         <a href="#" data-page="cronograma" onclick="navigateTo('cronograma')"><i class="fas fa-calendar-days" style="color:var(--gold);"></i>Cronograma</a>
         <a href="#" data-page="conquistas" onclick="navigateTo('conquistas')"><i class="fas fa-trophy" style="color:var(--gold);"></i>Conquistas</a>
+        <a href="#" data-page="ranking" onclick="navigateTo('ranking')"><i class="fas fa-trophy" style="color:var(--gold);"></i>Ranking</a>
+        <a href="#" data-page="materiais" onclick="navigateTo('materiais')"><i class="fas fa-book" style="color:var(--gold);"></i>Materiais</a>
+        <a href="#" id="adminNavLink" style="display:none;" onclick="enterAdmin();return false;"><i class="fas fa-shield-halved" style="color:var(--gold);"></i>Admin</a>
       </nav>
       <div class="header-user">
         <div class="avatar" id="userAvatar">?</div>
         <span class="user-name" id="userName">Aluno</span>
         <button class="btn-logout" onclick="doLogout()"><i class="fas fa-right-from-bracket"></i>Sair</button>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" onclick="toggleMobileMenu()" aria-label="Menu"><i class="fas fa-bars"></i></button>
       </div>
+    </div>
+    <div class="mobile-nav" id="mobileNav">
+      <a href="#" data-page="dashboard" onclick="navigateTo('dashboard');toggleMobileMenu();"><i class="fas fa-gauge-high"></i>Dashboard</a>
+      <a href="#" data-page="cronograma" onclick="navigateTo('cronograma');toggleMobileMenu();"><i class="fas fa-calendar-days"></i>Cronograma</a>
+      <a href="#" data-page="conquistas" onclick="navigateTo('conquistas');toggleMobileMenu();"><i class="fas fa-trophy"></i>Conquistas</a>
+      <a href="#" data-page="ranking" onclick="navigateTo('ranking');toggleMobileMenu();"><i class="fas fa-trophy"></i>Ranking</a>
+      <a href="#" data-page="materiais" onclick="navigateTo('materiais');toggleMobileMenu();"><i class="fas fa-book"></i>Materiais</a>
+      <a href="#" id="adminNavLinkMobile" style="display:none;" onclick="toggleMobileMenu();enterAdmin();return false;"><i class="fas fa-shield-halved"></i>Admin</a>
     </div>
   </header>
 
@@ -438,6 +538,28 @@ input,textarea,select{font-family:inherit;}
           <span class="xp-text" id="xpText">0 XP</span>
         </div>
         <div class="streak-badge"><i class="fas fa-fire"></i><span id="streakCount">0</span> dias seguidos</div>
+      </div>
+
+      <!-- Cronômetro de Estudo -->
+      <div class="timer-card fade-in">
+        <div class="timer-top">
+          <div class="timer-subject">
+            <label for="timerSubjectSelect"><i class="fas fa-book" style="margin-right:6px;color:var(--blue);"></i>Disciplina</label>
+            <select id="timerSubjectSelect">
+              <option value="Matemática">Matemática</option>
+              <option value="Português">Português</option>
+              <option value="Ciências Humanas">Ciências Humanas</option>
+              <option value="Ciências da Natureza">Ciências da Natureza</option>
+              <option value="Redação">Redação</option>
+            </select>
+          </div>
+          <div class="timer-display" id="timerDisplay">00:00:00</div>
+        </div>
+        <div class="timer-actions">
+          <button class="timer-btn primary" id="timerToggleBtn" onclick="toggleTimer()"><i class="fas fa-play"></i> Iniciar</button>
+          <button class="timer-btn" onclick="resetTimer()"><i class="fas fa-redo"></i> Resetar</button>
+          <button class="timer-btn success" onclick="finishTimer()"><i class="fas fa-check"></i> Finalizar</button>
+        </div>
       </div>
 
       <!-- Badges -->
@@ -468,6 +590,11 @@ input,textarea,select{font-family:inherit;}
           <div class="stat-label">Horas de estudo</div>
           <div class="stat-change"><i class="fas fa-star" style="color:var(--gold);"></i> Dedica&ccedil;&atilde;o total</div>
         </div>
+      </div>
+
+      <div class="progress-section fade-in">
+        <h2><i class="fas fa-list-check"></i> Progresso por tipo de atividade</h2>
+        <div class="progress-bars" id="activityTypeProgress"></div>
       </div>
 
       <div class="progress-section fade-in">
@@ -508,6 +635,36 @@ input,textarea,select{font-family:inherit;}
         </div>
       </div>
       <div id="achievementsContent"></div>
+    </div>
+  </div>
+
+  <!-- RANKING PAGE -->
+  <div id="pageRanking" class="page">
+    <div class="container">
+      <div class="dashboard-hero">
+        <div class="welcome-bar">
+          <h1><i class="fas fa-trophy" style="color:var(--gold);"></i> Ranking de Estudos</h1>
+        </div>
+      </div>
+      <div class="ranking-type-tabs">
+        <button class="ranking-type-btn active" id="rankingBtn-semanal" onclick="switchRankingType('semanal')"><i class="fas fa-calendar-week"></i> Semanal</button>
+        <button class="ranking-type-btn" id="rankingBtn-mensal" onclick="switchRankingType('mensal')"><i class="fas fa-calendar"></i> Mensal</button>
+      </div>
+      <div class="ranking-card">
+        <div id="rankingList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MATERIAIS PAGE -->
+  <div id="pageMateriais" class="page">
+    <div class="container">
+      <div class="dashboard-hero">
+        <div class="welcome-bar">
+          <h1><i class="fas fa-book" style="color:var(--gold);"></i> Materiais Extras</h1>
+        </div>
+      </div>
+      <div class="materials-list" id="materialsList"></div>
     </div>
   </div>
 </div>
@@ -1378,6 +1535,8 @@ function enterApp(email){
 
   loadProgress();
   renderDashboard();
+  updateStats();
+  checkAdminAccess();
   navigateTo('dashboard');
   showToast(`Bem-vindo(a), ${user.name.split(' ')[0]}!`, 'success');
 }
@@ -1548,17 +1707,19 @@ function checkAchievements(){
    ============================================================ */
 function navigateTo(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.header-nav a').forEach(a=>a.classList.remove('active'));
-  
-  const pageMap = {dashboard:'pageDashboard',cronograma:'pageCronograma',conquistas:'pageConquistas'};
-  const navMap = {dashboard:0,cronograma:1,conquistas:2};
-  
-  document.getElementById(pageMap[page]).classList.add('active');
-  document.querySelectorAll('.header-nav a')[navMap[page]].classList.add('active');
+  document.querySelectorAll('.header-nav a[data-page], .mobile-nav a[data-page]').forEach(a=>a.classList.remove('active'));
+
+  const pageMap = {dashboard:'pageDashboard',cronograma:'pageCronograma',conquistas:'pageConquistas',ranking:'pageRanking',materiais:'pageMateriais'};
+
+  const pageEl = document.getElementById(pageMap[page]);
+  if(pageEl) pageEl.classList.add('active');
+  document.querySelectorAll(`[data-page="${page}"]`).forEach(a=>a.classList.add('active'));
 
   if(page==='dashboard') renderDashboard();
   if(page==='cronograma') renderCronograma();
   if(page==='conquistas') renderAchievements();
+  if(page==='ranking') renderRanking();
+  if(page==='materiais') renderMaterialsPage();
 }
 
 /* ============================================================
@@ -1587,6 +1748,7 @@ function renderDashboard(){
   `).join('');
 
   renderMonthTabs('monthTabs','monthDesc','weeksGrid');
+  updateStats();
 }
 
 /* ============================================================
@@ -1825,55 +1987,90 @@ function renderDayContent(month, week, dayIdx, weekData){
 
 /* ============================================================
    QUIZ HANDLING
+   (CORRIGIDO: cada atividade só concede XP uma vez, usando uma
+   flag "xp-<chave>" guardada dentro do objeto progress)
    ============================================================ */
+function xpAlreadyAwarded(xpKey){
+  return progress[xpKey] === true;
+}
+function markXPAwarded(xpKey){
+  progress[xpKey] = true;
+  saveProgress();
+}
+
 function answerQuiz(month, week, dayIdx, quizName, quizCat, qIdx, optIdx, correctIdx){
   const ansKey = getProgressKey(month, week, dayIdx, `quiz-ans-${quizName}-${qIdx}`, 'answer');
-  if(progress[ansKey] !== undefined && progress[ansKey] !== null) return; // already answered
+  if(progress[ansKey] !== undefined && progress[ansKey] !== null) return; // já respondida, evita XP infinito
 
   markActivity(month, week, dayIdx, `quiz-ans-${quizName}-${qIdx}`, 'answer', optIdx.toString());
-  
+
   if(optIdx === correctIdx){
     addXP(10);
-    showToast('Resposta correta! +10 XP', 'success');
+    showNotification('+10 XP por completar Exercício!', 'success');
   } else {
-    showToast('Resposta incorreta. Veja a explicação abaixo.', 'error');
+    showNotification('Resposta incorreta. Veja a explicação abaixo.', 'error');
   }
 
-  // Mark quiz as attempted
+  // Marca o quiz do dia como tentado (uma única vez concede XP extra)
   const qKey = getProgressKey(month, week, dayIdx, 'quiz', quizName);
+  const qXpKey = 'xp-' + qKey;
   if(!progress[qKey]){
     markActivity(month, week, dayIdx, 'quiz', quizName, true);
+  }
+  if(!xpAlreadyAwarded(qXpKey)){
+    markXPAwarded(qXpKey);
     addXP(5);
   }
 
-  // Re-render to show results
+  // Re-render para mostrar o resultado
   renderDayContent(month, week, dayIdx, cronograma[month][week-1]);
 }
 
 function toggleVideo(month, week, dayIdx, videoName, checked){
   markActivity(month, week, dayIdx, 'video', videoName, checked);
-  if(checked){ addXP(5); showToast('Videoaula marcada! +5 XP', 'success'); }
+  const xpKey = 'xp-' + getProgressKey(month, week, dayIdx, 'video', videoName);
+  if(checked && !xpAlreadyAwarded(xpKey)){
+    markXPAwarded(xpKey);
+    addXP(5);
+    showNotification('+5 XP por completar Videoaula!', 'success');
+  }
 }
 
 function toggleQuiz(month, week, dayIdx, quizName, checked){
-  if(checked) addXP(3);
   markActivity(month, week, dayIdx, 'quiz', quizName, checked);
+  const xpKey = 'xp-' + getProgressKey(month, week, dayIdx, 'quiz', quizName) + '-manual';
+  if(checked && !xpAlreadyAwarded(xpKey)){
+    markXPAwarded(xpKey);
+    addXP(3);
+    showNotification('+3 XP por completar Exercícios!', 'success');
+  }
 }
 
 function toggleSummary(month, week, dayIdx, summaryName, checked){
   markActivity(month, week, dayIdx, 'summary', summaryName, checked);
-  if(checked){ addXP(3); showToast('Resumo lido! +3 XP', 'success'); }
+  const xpKey = 'xp-' + getProgressKey(month, week, dayIdx, 'summary', summaryName);
+  if(checked && !xpAlreadyAwarded(xpKey)){
+    markXPAwarded(xpKey);
+    addXP(3);
+    showNotification('+3 XP por completar Resumo!', 'success');
+  }
 }
 
 function toggleMaterials(month, week, dayIdx, checked){
   markActivity(month, week, dayIdx, 'materials', 'read', checked);
-  if(checked) addXP(2);
+  const xpKey = 'xp-' + getProgressKey(month, week, dayIdx, 'materials', 'read');
+  if(checked && !xpAlreadyAwarded(xpKey)){
+    markXPAwarded(xpKey);
+    addXP(2);
+    showNotification('+2 XP por completar Materiais!', 'success');
+  }
 }
 
 function closeStudyModal(){
   document.getElementById('studyModal').classList.remove('show');
   document.body.style.overflow = '';
   renderDashboard();
+  updateStats();
 }
 
 /* ============================================================
@@ -2102,7 +2299,6 @@ function confirmEditUser(){
   if(email !== oldEmail){
     delete users[oldEmail];
     users[email] = user;
-    // Migrate progress data
     const prog = localStorage.getItem(`aprova_progress_${oldEmail}`);
     if(prog) {
       localStorage.setItem(`aprova_progress_${email}`, prog);
@@ -2135,7 +2331,6 @@ function viewAdminUser(email){
   const totalPossible = 288;
   const pct = totalPossible > 0 ? Math.round(actCount/totalPossible*100) : 0;
 
-  // Calculate real per-subject progress
   const subjects = {mat:0, matTotal:0, port:0, portTotal:0, human:0, humanTotal:0, nat:0, natTotal:0, red:0, redTotal:0};
   for(let m=1; m<=3; m++){
     const weeks = cronograma[m];
@@ -2226,7 +2421,6 @@ function renderAdminStats(){
   let maxStreak = 0;
   let totalPossible = 288;
 
-  // Per-subject totals
   const subjTotals = {mat:0, matTotal:0, port:0, portTotal:0, human:0, humanTotal:0, nat:0, natTotal:0};
 
   entries.forEach(([email])=>{
@@ -2236,7 +2430,6 @@ function renderAdminStats(){
     const acts = Object.keys(prog).filter(k=>prog[k]).length;
     totalActs += acts;
     if((stats2.streak||0) > maxStreak) maxStreak = stats2.streak;
-    // Per-subject
     for(let m=1;m<=3;m++){
       const weeks = cronograma[m];
       if(!weeks) continue;
@@ -2276,9 +2469,9 @@ function renderAdminStats(){
     <div class="admin-detail">
       <h3><i class="fas fa-chart-bar" style="margin-right:6px;color:var(--blue);"></i>Visão geral da plataforma</h3>
       <p style="font-size:0.88rem;color:var(--muted);line-height:1.7;margin-bottom:16px;">
-        <strong>${entries.length}</strong> alunos cadastrados. 
-        <strong>${totalActs}</strong> atividades concluídas no total. 
-        <strong>${totalXP}</strong> XP distribuídos. 
+        <strong>${entries.length}</strong> alunos cadastrados.
+        <strong>${totalActs}</strong> atividades concluídas no total.
+        <strong>${totalXP}</strong> XP distribuídos.
         Maior sequência de estudos: <strong>${maxStreak} dias</strong>.
       </p>
       <h4 style="font-size:0.9rem;color:var(--blue-dark);margin-bottom:12px;">Progresso coletivo por área:</h4>
@@ -2360,7 +2553,7 @@ function exportAdminData(){
   const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
   const entries = Object.entries(users);
   if(entries.length === 0){showToast('Nenhum dado para exportar.','warning');return;}
-  
+
   let csv = 'Nome,E-mail,Cadastro,XP,Streak,Progresso(%),Atividades\n';
   entries.forEach(([email, user])=>{
     const prog = JSON.parse(localStorage.getItem(`aprova_progress_${email}`)||'{}');
@@ -2370,7 +2563,7 @@ function exportAdminData(){
     const created = user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : 'N/A';
     csv += `"${user.name}",${email},${created},${stats2.xp||0},${stats2.streak||0},${pct},${actCount}\n`;
   });
-  
+
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
@@ -2408,7 +2601,7 @@ function deleteAllUsers(){
 }
 
 /* ============================================================
-   TOAST NOTIFICATIONS
+   TOAST NOTIFICATIONS (sistema original, mantido)
    ============================================================ */
 function showToast(msg, type='success'){
   const container = document.getElementById('toastContainer');
@@ -2419,6 +2612,314 @@ function showToast(msg, type='success'){
   toast.innerHTML = `<i class="fas ${icon}" style="color:${color};font-size:1.1rem;"></i><span>${msg}</span>`;
   container.appendChild(toast);
   setTimeout(()=>{toast.style.animation='toastOut 0.3s ease forwards';setTimeout(()=>toast.remove(),300);}, 3000);
+}
+
+/* ============================================================
+   ============================================================
+   NOVAS FUNCIONALIDADES ADICIONADAS
+   (cronômetro, ranking, materiais, notificações, progresso
+   visual por tipo de atividade, responsividade e correção de
+   XP infinito) — nada do design original foi alterado.
+   ============================================================
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1) CRONÔMETRO DE ESTUDO
+   ------------------------------------------------------------ */
+let timerInterval = null;
+let timerSeconds = 0;
+let timerRunning = false;
+
+// Atualiza o display HH:MM:SS do cronômetro
+function updateTimerDisplay(){
+  const h = String(Math.floor(timerSeconds/3600)).padStart(2,'0');
+  const m = String(Math.floor((timerSeconds%3600)/60)).padStart(2,'0');
+  const s = String(timerSeconds%60).padStart(2,'0');
+  const el = document.getElementById('timerDisplay');
+  if(el) el.textContent = `${h}:${m}:${s}`;
+}
+
+// Inicia ou pausa o cronômetro
+function toggleTimer(){
+  const btn = document.getElementById('timerToggleBtn');
+  if(!timerRunning){
+    timerRunning = true;
+    timerInterval = setInterval(()=>{
+      timerSeconds++;
+      updateTimerDisplay();
+    }, 1000);
+    if(btn) btn.innerHTML = '<i class="fas fa-pause"></i> Pausar';
+  } else {
+    timerRunning = false;
+    clearInterval(timerInterval);
+    if(btn) btn.innerHTML = '<i class="fas fa-play"></i> Iniciar';
+  }
+}
+
+// Zera o cronômetro (sem salvar horas estudadas)
+function resetTimer(){
+  timerRunning = false;
+  clearInterval(timerInterval);
+  timerSeconds = 0;
+  updateTimerDisplay();
+  const btn = document.getElementById('timerToggleBtn');
+  if(btn) btn.innerHTML = '<i class="fas fa-play"></i> Iniciar';
+}
+
+// Finaliza a sessão: soma o tempo às horas estudadas do usuário e reseta o cronômetro
+function finishTimer(){
+  if(timerSeconds < 1){
+    showNotification('Inicie o cronômetro antes de finalizar a sessão.', 'info');
+    return;
+  }
+  timerRunning = false;
+  clearInterval(timerInterval);
+
+  const subjectSelect = document.getElementById('timerSubjectSelect');
+  const subjectLabel = subjectSelect ? subjectSelect.value : 'Estudo geral';
+  const minutesStudied = Math.max(1, Math.round(timerSeconds/60));
+
+  if(!currentUser){ resetTimer(); return; }
+  const stats = JSON.parse(localStorage.getItem(`aprova_stats_${currentUser}`)||'{"xp":0,"streak":0}');
+  stats.studyMinutes = (stats.studyMinutes||0) + minutesStudied;
+  localStorage.setItem(`aprova_stats_${currentUser}`, JSON.stringify(stats));
+
+  showNotification(`Sessão de ${subjectLabel} registrada: ${minutesStudied} min!`, 'success');
+  addXP(Math.min(20, Math.round(minutesStudied/5))); // pequena recompensa por estudar
+  timerSeconds = 0;
+  updateTimerDisplay();
+  const btn = document.getElementById('timerToggleBtn');
+  if(btn) btn.innerHTML = '<i class="fas fa-play"></i> Iniciar';
+
+  updateStats();
+  renderDashboard();
+}
+
+/* ------------------------------------------------------------
+   2) RANKING (Semanal / Mensal)
+   ------------------------------------------------------------ */
+let currentRankingType = 'semanal';
+
+// Dados de exemplo (mock) para o ranking — em produção viriam do backend
+function loadRankingPreview(type){
+  const mockWeekly = [
+    {name:'Marina Souza', hours:14, days:6},
+    {name:'Lucas Andrade', hours:12, days:6},
+    {name:'Beatriz Lima', hours:11, days:5},
+    {name:'Pedro Henrique', hours:9, days:5},
+    {name:'Camila Rocha', hours:8, days:4}
+  ];
+  const mockMonthly = [
+    {name:'Beatriz Lima', hours:48, days:24},
+    {name:'Marina Souza', hours:45, days:22},
+    {name:'Rafael Torres', hours:40, days:20},
+    {name:'Lucas Andrade', hours:37, days:19},
+    {name:'Camila Rocha', hours:33, days:17}
+  ];
+
+  // Inclui o usuário atual na lista, com base nas horas/streak reais dele
+  let ranking = type === 'mensal' ? mockMonthly.slice() : mockWeekly.slice();
+  if(currentUser){
+    const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
+    const user = users[currentUser];
+    const stats = JSON.parse(localStorage.getItem(`aprova_stats_${currentUser}`)||'{"xp":0,"streak":0,"studyMinutes":0}');
+    const myHours = Math.round((stats.studyMinutes||0)/60);
+    const myDays = calculateStats().totalDays;
+    if(user){
+      ranking.push({name: user.name + ' (você)', hours: myHours, days: myDays});
+    }
+  }
+  ranking.sort((a,b)=> b.hours - a.hours);
+  return ranking.slice(0,5);
+}
+
+// Alterna entre ranking Semanal e Mensal
+function switchRankingType(type){
+  currentRankingType = type;
+  document.querySelectorAll('.ranking-type-btn').forEach(b=>b.classList.remove('active'));
+  const activeBtn = document.getElementById('rankingBtn-'+type);
+  if(activeBtn) activeBtn.classList.add('active');
+  renderRanking();
+}
+
+function renderRanking(){
+  const el = document.getElementById('rankingList');
+  if(!el) return;
+  const data = loadRankingPreview(currentRankingType);
+  const medalColors = ['#F59E0B','#94A3B8','#B45309'];
+  el.innerHTML = data.map((r,i)=>{
+    const medal = i < 3
+      ? `<i class="fas fa-medal" style="color:${medalColors[i]};font-size:1.2rem;"></i>`
+      : `<span style="font-weight:800;color:var(--muted);width:20px;display:inline-block;text-align:center;">${i+1}</span>`;
+    return `
+      <div class="ranking-row">
+        <div class="ranking-pos">${medal}</div>
+        <div class="ranking-name">${r.name}</div>
+        <div class="ranking-metric"><i class="fas fa-clock-rotate-left" style="margin-right:4px;color:var(--blue);"></i>${r.hours}h</div>
+        <div class="ranking-metric"><i class="fas fa-calendar-check" style="margin-right:4px;color:var(--success);"></i>${r.days}d</div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ------------------------------------------------------------
+   3) MATERIAIS EXTRAS
+   ------------------------------------------------------------ */
+function loadMaterials(){
+  return [
+    {title:'Resumo completo: Funções do 1º e 2º grau', type:'pdf', subject:'Matemática'},
+    {title:'Apostila: Interpretação de texto no ENEM', type:'pdf', subject:'Português'},
+    {title:'Artigo: Como caem as Ciências Humanas no ENEM', type:'artigo', subject:'Humanas'},
+    {title:'Lista de exercícios: Química orgânica', type:'exercicios', subject:'Natureza'},
+    {title:'Artigo: Repertórios socioculturais que valem ouro', type:'artigo', subject:'Redação'},
+    {title:'Resumo em PDF: Genética e Evolução', type:'pdf', subject:'Natureza'},
+    {title:'Lista de exercícios: Progressões (PA e PG)', type:'exercicios', subject:'Matemática'},
+    {title:'Artigo: Linha do tempo da História do Brasil', type:'artigo', subject:'Humanas'},
+    {title:'Resumo em PDF: Estrutura da redação nota 1000', type:'pdf', subject:'Redação'},
+    {title:'Lista de exercícios: Interpretação e gramática', type:'exercicios', subject:'Português'}
+  ];
+}
+
+function materialIcon(type){
+  if(type === 'pdf') return 'fas fa-file-pdf';
+  if(type === 'artigo') return 'fas fa-file-alt';
+  if(type === 'exercicios') return 'fas fa-list-check';
+  return 'fas fa-file';
+}
+function materialTypeLabel(type){
+  if(type === 'pdf') return 'PDF';
+  if(type === 'artigo') return 'ARTIGO';
+  if(type === 'exercicios') return 'EXERCÍCIOS';
+  return 'MATERIAL';
+}
+
+function renderMaterialsPage(){
+  const el = document.getElementById('materialsList');
+  if(!el) return;
+  const materials = loadMaterials();
+  el.innerHTML = materials.map(m=>`
+    <div class="material-item" onclick="openMaterial('${m.title.replace(/'/g,"\\'")}')">
+      <i class="${materialIcon(m.type)}"></i>
+      <div class="mat-info"><strong>${m.title}</strong><span>${m.subject}</span></div>
+      <span class="mat-type">${materialTypeLabel(m.type)}</span>
+    </div>
+  `).join('');
+}
+
+// Abre (simuladamente) um material ao clicar
+function openMaterial(title){
+  showNotification(`Abrindo material: ${title}`, 'info');
+}
+
+/* ------------------------------------------------------------
+   4) CONTROLE DE ACESSO ADMIN (mostra/esconde link no menu)
+   ------------------------------------------------------------ */
+function checkAdminAccess(){
+  const navLink = document.getElementById('adminNavLink');
+  const mobileLink = document.getElementById('adminNavLinkMobile');
+  if(!currentUser){
+    if(navLink) navLink.style.display = 'none';
+    if(mobileLink) mobileLink.style.display = 'none';
+    return;
+  }
+  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
+  const user = users[currentUser];
+  const isAdmin = !!(user && user.isAdmin);
+  if(navLink) navLink.style.display = isAdmin ? 'flex' : 'none';
+  if(mobileLink) mobileLink.style.display = isAdmin ? 'flex' : 'none';
+}
+
+/* Abre/fecha o menu mobile (hambúrguer) adicionado para responsividade */
+function toggleMobileMenu(){
+  const nav = document.getElementById('mobileNav');
+  if(nav) nav.classList.toggle('open');
+}
+
+/* ------------------------------------------------------------
+   5) NOTIFICAÇÕES (.notification) — sistema independente do toast
+   ------------------------------------------------------------ */
+function showNotification(message, type='info'){
+  const container = document.getElementById('notificationContainer');
+  if(!container) return;
+  const icon = type === 'success' ? 'fa-check-circle'
+             : type === 'error' ? 'fa-exclamation-circle'
+             : 'fa-info-circle';
+  const colorVar = type === 'success' ? 'var(--success)'
+                  : type === 'error' ? 'var(--danger)'
+                  : 'var(--blue)';
+  const note = document.createElement('div');
+  note.className = `notification notification-${type}`;
+  note.innerHTML = `
+    <i class="fas ${icon}" style="color:${colorVar};font-size:1.1rem;"></i>
+    <span class="notification-msg">${message}</span>
+    <button class="notification-close" onclick="closeNotification(this.parentElement)"><i class="fas fa-xmark"></i></button>
+  `;
+  container.appendChild(note);
+  setTimeout(()=>{ closeNotification(note); }, 3000);
+}
+
+function closeNotification(el){
+  if(!el || !el.parentElement) return;
+  el.style.animation = 'toastOut 0.3s ease forwards';
+  setTimeout(()=>{ if(el.parentElement) el.remove(); }, 300);
+}
+
+/* ------------------------------------------------------------
+   6) PROGRESSO VISUAL POR TIPO DE ATIVIDADE
+   ------------------------------------------------------------ */
+// Percorre todo o cronograma e conta quantos vídeos, quizzes,
+// resumos e materiais existem no total e quantos já foram concluídos
+function calculateActivityTypeStats(){
+  const result = {
+    video:{done:0,total:0},
+    quiz:{done:0,total:0},
+    summary:{done:0,total:0},
+    materials:{done:0,total:0}
+  };
+  for(let m=1;m<=3;m++){
+    const weeks = cronograma[m];
+    if(!weeks) continue;
+    weeks.forEach(w=>{
+      w.days.forEach((d,di)=>{
+        result.video.total++;
+        result.quiz.total++;
+        result.summary.total++;
+        result.materials.total++;
+        const vKey = getProgressKey(m,w.week,di,'video',d.video);
+        const qKey = getProgressKey(m,w.week,di,'quiz',d.quiz);
+        const sKey = getProgressKey(m,w.week,di,'summary',d.summary);
+        const matKey = getProgressKey(m,w.week,di,'materials','read');
+        if(progress[vKey]) result.video.done++;
+        if(progress[qKey]) result.quiz.done++;
+        if(progress[sKey]) result.summary.done++;
+        if(progress[matKey]) result.materials.done++;
+      });
+    });
+  }
+  return result;
+}
+
+// Atualiza as barras de progresso por tipo de atividade (Vídeos, Quizzes, Resumos, Materiais)
+function updateStats(){
+  const stats = calculateActivityTypeStats();
+  const types = [
+    {key:'video', label:'Vídeos', icon:'fas fa-video', color:'blue'},
+    {key:'quiz', label:'Quizzes', icon:'fas fa-question-circle', color:'gold'},
+    {key:'summary', label:'Resumos', icon:'fas fa-file-alt', color:'green'},
+    {key:'materials', label:'Materiais', icon:'fas fa-folder', color:'purple'}
+  ];
+  const el = document.getElementById('activityTypeProgress');
+  if(!el) return;
+  el.innerHTML = types.map(t=>{
+    const s = stats[t.key];
+    const pct = s.total > 0 ? Math.round(s.done/s.total*100) : 0;
+    return `
+      <div class="progress-item">
+        <div class="pi-head"><strong><i class="${t.icon}" style="margin-right:6px;color:var(--${t.color==='gold'?'gold-dark':t.color});"></i>${t.label}</strong><span>${s.done}/${s.total}</span></div>
+        <div class="progress-bar"><div class="fill ${t.color}" style="width:${pct}%"></div></div>
+      </div>
+    `;
+  }).join('');
 }
 
 /* ============================================================
@@ -2435,6 +2936,9 @@ window.addEventListener('scroll',()=>{
   const header = document.getElementById('appHeader');
   if(header) header.classList.toggle('scrolled', window.scrollY > 10);
 });
+
+// Atualiza o display do cronômetro assim que a página carrega
+updateTimerDisplay();
 
 // Auto-login check
 (function(){
