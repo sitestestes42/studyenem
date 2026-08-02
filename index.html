@@ -430,39 +430,9 @@ input,textarea,select{font-family:inherit;}
       </div>
       <button class="auth-btn" type="submit"><i class="fas fa-arrow-right-to-bracket" style="margin-right:8px;"></i>Entrar</button>
     </form>
-    <div class="auth-switch">N&atilde;o tem conta? <a onclick="showRegister()"><i class="fas fa-user-plus" style="margin-right:4px;"></i>Criar conta</a></div>
     <div style="text-align:center;margin-top:16px;font-size:0.8rem;color:var(--muted);">
       <a onclick="showAdminLogin()" style="color:var(--blue);cursor:pointer;font-weight:600;"><i class="fas fa-shield-halved" style="margin-right:4px;"></i>Acesso Admin</a>
     </div>
-  </div>
-</div>
-
-<!-- ===== AUTH: REGISTER ===== -->
-<div id="registerScreen" class="auth-wrapper" style="display:none;">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <i class="fas fa-graduation-cap"></i>
-      <h1>APROVA <span style="color:var(--gold);">ENEM</span></h1>
-      <p>Crie sua conta e come&ccedil;e a estudar</p>
-    </div>
-    <div class="auth-error" id="registerError"></div>
-    <div class="auth-success" id="registerSuccess"></div>
-    <form class="auth-form" id="registerForm" onsubmit="return doRegister(event)">
-      <div class="field">
-        <label><i class="fas fa-user" style="color:var(--blue);margin-right:6px;"></i>Nome completo</label>
-        <input type="text" id="regName" placeholder="Seu nome" required>
-      </div>
-      <div class="field">
-        <label><i class="fas fa-envelope" style="color:var(--blue);margin-right:6px;"></i>E-mail</label>
-        <input type="email" id="regEmail" placeholder="seu@email.com" required>
-      </div>
-      <div class="field">
-        <label><i class="fas fa-lock" style="color:var(--blue);margin-right:6px;"></i>Senha</label>
-        <input type="password" id="regPassword" placeholder="M&iacute;nimo 6 caracteres" required minlength="6">
-      </div>
-      <button class="auth-btn" type="submit"><i class="fas fa-user-plus" style="margin-right:8px;"></i>Criar conta</button>
-    </form>
-    <div class="auth-switch">J&aacute; tem conta? <a onclick="showLogin()"><i class="fas fa-arrow-right-to-bracket" style="margin-right:4px;"></i>Fazer login</a></div>
   </div>
 </div>
 
@@ -781,7 +751,60 @@ input,textarea,select{font-family:inherit;}
   <div class="footer-bottom">&copy; 2026 Aprova ENEM. Todos os direitos reservados.</div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+/* ============================================================
+   SUPABASE — conexão e funções auxiliares de acesso aos dados
+   Tudo (contas, progresso, XP, sessões de estudo e ranking) é
+   salvo de verdade no Supabase, não mais no localStorage.
+   ============================================================ */
+const SUPABASE_URL = 'https://knyafqpszvkzrkoixezv.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Bi2hijYRqEC9JsanVCCa9g_MPJkw7Ch';
+const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function sbGetUserByEmail(email){
+  const { data, error } = await sbClient.from('users').select('*').eq('email', email).maybeSingle();
+  if(error){ console.error('Erro ao buscar usuário:', error); return null; }
+  return data;
+}
+async function sbGetAllUsers(){
+  const { data, error } = await sbClient.from('users').select('*').order('created_at', {ascending:false});
+  if(error){ console.error('Erro ao listar usuários:', error); return []; }
+  return data || [];
+}
+async function sbCreateUser(user){
+  const { data, error } = await sbClient.from('users').insert(user).select().maybeSingle();
+  if(error) throw error;
+  await sbClient.from('user_stats').insert({user_id:data.id, xp:0, streak:0, study_minutes:0, badges:[], progress:{}});
+  return data;
+}
+async function sbUpdateUser(id, fields){
+  const { error } = await sbClient.from('users').update(fields).eq('id', id);
+  if(error) throw error;
+}
+async function sbDeleteUser(id){
+  const { error } = await sbClient.from('users').delete().eq('id', id);
+  if(error) throw error;
+}
+async function sbGetStats(userId){
+  const { data, error } = await sbClient.from('user_stats').select('*').eq('user_id', userId).maybeSingle();
+  if(error){ console.error('Erro ao buscar stats:', error); return null; }
+  return data;
+}
+async function sbUpsertStats(userId, fields){
+  const { error } = await sbClient.from('user_stats').update({...fields, updated_at:new Date().toISOString()}).eq('user_id', userId);
+  if(error) console.error('Erro ao salvar stats:', error);
+}
+async function sbInsertSession(userId, subject, minutes){
+  const { error } = await sbClient.from('study_sessions').insert({user_id:userId, subject, minutes});
+  if(error) console.error('Erro ao salvar sessão de estudo:', error);
+}
+async function sbFetchSessionsSince(sinceISO){
+  const { data, error } = await sbClient.from('study_sessions').select('user_id, minutes, created_at, users(name)').gte('created_at', sinceISO);
+  if(error){ console.error('Erro ao buscar sessões:', error); return []; }
+  return data || [];
+}
+
 /* ============================================================
    VIDEO IDs (Verificados - Descomplica/ProEnem)
    ============================================================ */
@@ -1416,14 +1439,10 @@ let streak = 0;
 let earnedBadges = new Set();
 
 /* ============================================================
-   AUTH SYSTEM
+   AUTH SYSTEM (agora consultando o Supabase — sem auto-cadastro;
+   contas de aluno só são criadas pelo painel Admin)
    ============================================================ */
-function showRegister(){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('registerScreen').style.display='flex';
-}
 function showLogin(){
-  document.getElementById('registerScreen').style.display='none';
   document.getElementById('adminLoginScreen').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
 }
@@ -1432,53 +1451,32 @@ function showAdminLogin(){
   document.getElementById('adminLoginScreen').style.display='flex';
 }
 
-function doLogin(e){
+async function doLogin(e){
   e.preventDefault();
   const email = document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass = document.getElementById('loginPassword').value;
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
   const errEl = document.getElementById('loginError');
-  if(!users[email]){
-    errEl.textContent='E-mail não encontrado. Crie uma conta.';
+  errEl.style.display='none';
+
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  if(submitBtn) submitBtn.disabled = true;
+
+  const user = await sbGetUserByEmail(email);
+
+  if(submitBtn) submitBtn.disabled = false;
+
+  if(!user){
+    errEl.textContent='E-mail não encontrado. Peça ao administrador para criar sua conta.';
     errEl.style.display='block';
     return false;
   }
-  if(users[email].password !== pass){
+  if(user.password !== pass){
     errEl.textContent='Senha incorreta. Tente novamente.';
     errEl.style.display='block';
     return false;
   }
-  localStorage.setItem('aprova_current', email);
-  errEl.style.display='none';
-  enterApp(email);
-  return false;
-}
-
-function doRegister(e){
-  e.preventDefault();
-  const name = document.getElementById('regName').value.trim();
-  const email = document.getElementById('regEmail').value.trim().toLowerCase();
-  const pass = document.getElementById('regPassword').value;
-  const errEl = document.getElementById('registerError');
-  const sucEl = document.getElementById('registerSuccess');
-  if(pass.length < 6){
-    errEl.textContent='A senha deve ter pelo menos 6 caracteres.';
-    errEl.style.display='block';
-    return false;
-  }
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  if(users[email]){
-    errEl.textContent='Este e-mail já está cadastrado. Faça login.';
-    errEl.style.display='block';
-    return false;
-  }
-  users[email] = {name, password: pass, createdAt: new Date().toISOString()};
-  localStorage.setItem('aprova_users', JSON.stringify(users));
-  localStorage.setItem('aprova_current', email);
-  errEl.style.display='none';
-  sucEl.textContent='Conta criada com sucesso! Bem-vindo(a)!';
-  sucEl.style.display='block';
-  setTimeout(()=>{enterApp(email);}, 800);
+  localStorage.setItem('aprova_current_id', user.id);
+  await enterApp(user);
   return false;
 }
 
@@ -1487,7 +1485,7 @@ function doAdminLogin(e){
   const user = document.getElementById('adminUser').value.trim();
   const pass = document.getElementById('adminPass').value;
   const errEl = document.getElementById('adminError');
-  // Default admin credentials
+  // Credencial de acesso ao painel (separada da tabela de alunos)
   const adminUsers = JSON.parse(localStorage.getItem('aprova_admins')||'{"02n01":"04n01"}');
   if(adminUsers[user] && adminUsers[user] === pass){
     errEl.style.display='none';
@@ -1500,7 +1498,8 @@ function doAdminLogin(e){
 }
 
 function doLogout(){
-  localStorage.removeItem('aprova_current');
+  localStorage.removeItem('aprova_current_id');
+  currentUser = null;
   document.getElementById('mainApp').style.display='none';
   document.getElementById('adminPanel').style.display='none';
   document.getElementById('appFooter').style.display='block';
@@ -1509,14 +1508,10 @@ function doLogout(){
   document.getElementById('loginPassword').value='';
 }
 
-function enterApp(email){
-  currentUser = email;
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  const user = users[email];
-  if(!user) return;
+async function enterApp(user){
+  currentUser = user;
 
   document.getElementById('loginScreen').style.display='none';
-  document.getElementById('registerScreen').style.display='none';
   document.getElementById('adminLoginScreen').style.display='none';
   document.getElementById('mainApp').style.display='block';
   document.getElementById('appFooter').style.display='block';
@@ -1533,7 +1528,7 @@ function enterApp(email){
   document.getElementById('todayLabel').textContent = dateStr;
   document.getElementById('todayLabel2').textContent = dateStr;
 
-  loadProgress();
+  await loadProgress();
   renderDashboard();
   updateStats();
   checkAdminAccess();
@@ -1543,7 +1538,6 @@ function enterApp(email){
 
 function enterAdmin(){
   document.getElementById('loginScreen').style.display='none';
-  document.getElementById('registerScreen').style.display='none';
   document.getElementById('adminLoginScreen').style.display='none';
   document.getElementById('mainApp').style.display='none';
   document.getElementById('adminPanel').style.display='block';
@@ -1559,22 +1553,30 @@ function exitAdmin(){
 }
 
 /* ============================================================
-   PROGRESS SYSTEM
+   PROGRESS SYSTEM (agora persistido de verdade no Supabase)
    ============================================================ */
-function loadProgress(){
+let studyMinutesTotal = 0;
+
+async function loadProgress(){
   if(!currentUser) return;
-  progress = JSON.parse(localStorage.getItem(`aprova_progress_${currentUser}`)||'{}');
-  const stats = JSON.parse(localStorage.getItem(`aprova_stats_${currentUser}`)||'{"xp":0,"streak":0,"lastStudy":null}');
-  xp = stats.xp || 0;
-  streak = stats.streak || 0;
-  earnedBadges = new Set(stats.badges || []);
+  let stats = await sbGetStats(currentUser.id);
+  if(!stats){
+    // primeiro acesso deste usuário: cria a linha de stats
+    await sbClient.from('user_stats').insert({user_id: currentUser.id, xp:0, streak:0, study_minutes:0, badges:[], progress:{}});
+    stats = await sbGetStats(currentUser.id);
+  }
+  progress = (stats && stats.progress) || {};
+  xp = (stats && stats.xp) || 0;
+  streak = (stats && stats.streak) || 0;
+  studyMinutesTotal = (stats && stats.study_minutes) || 0;
+  earnedBadges = new Set((stats && stats.badges) || []);
   updateGamification();
 }
 
 function saveProgress(){
   if(!currentUser) return;
-  localStorage.setItem(`aprova_progress_${currentUser}`, JSON.stringify(progress));
-  localStorage.setItem(`aprova_stats_${currentUser}`, JSON.stringify({xp, streak, lastStudy: new Date().toDateString(), badges: [...earnedBadges]}));
+  // salva em segundo plano (não bloqueia a interface)
+  sbUpsertStats(currentUser.id, {xp, streak, badges:[...earnedBadges], progress});
 }
 
 function getProgressKey(month, week, day, activity, detail){
@@ -1656,7 +1658,7 @@ function calculateStats(){
     totalActivities,
     totalPossible,
     progressPct: totalPossible > 0 ? Math.round((totalActivities/totalPossible)*100) : 0,
-    hours: Math.floor(totalActivities * 0.5),
+    hours: Math.round((studyMinutesTotal/60)*10)/10,
     subjects,
     matMonth1, portMonth1, redMonth1
   };
@@ -1901,17 +1903,17 @@ function renderDayContent(month, week, dayIdx, weekData){
   // Materials section
   const matType = day.videoCat === 'redacao' ? 'Redação' : day.subjects.join(' + ');
   const materialsHTML = `<div class="materials-list">
-    <div class="material-item" onclick="showToast('Material disponível em breve!','warning')">
+    <div class="material-item" onclick="openMaterialSummary(${month},${week},${dayIdx})">
       <i class="fas fa-file-pdf"></i>
       <div class="mat-info"><strong>Resumo em PDF</strong><span>Apostila do dia — ${matType}</span></div>
       <span class="mat-type">PDF</span>
     </div>
-    <div class="material-item" onclick="showToast('Material disponível em breve!','warning')">
+    <div class="material-item" onclick="openMaterialArticle(${month},${week},${dayIdx})">
       <i class="fas fa-link"></i>
       <div class="mat-info"><strong>Artigo complementar</strong><span>Leitura extra sobre ${day.video}</span></div>
       <span class="mat-type">ARTIGO</span>
     </div>
-    <div class="material-item" onclick="showToast('Material disponível em breve!','warning')">
+    <div class="material-item" onclick="openMaterialExtraExercises(${month},${week},${dayIdx})">
       <i class="fas fa-list-check"></i>
       <div class="mat-info"><strong>Lista de exercícios extra</strong><span>Questões adicionais do ENEM</span></div>
       <span class="mat-type">EXERCÍCIOS</span>
@@ -1996,6 +1998,91 @@ function xpAlreadyAwarded(xpKey){
 function markXPAwarded(xpKey){
   progress[xpKey] = true;
   saveProgress();
+}
+
+/* ------------------------------------------------------------
+   Materiais extras do dia — ações reais (sem mensagem de "em breve")
+   ------------------------------------------------------------ */
+
+// Abre uma página com o resumo do dia, pronta para o aluno imprimir/salvar como PDF
+function openMaterialSummary(month, week, dayIdx){
+  const day = cronograma[month][week-1].days[dayIdx];
+  const text = summaryDB[day.summary] || 'Resumo em desenvolvimento.';
+  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+    <title>Resumo — ${day.summary}</title>
+    <style>
+      body{font-family:'Georgia',serif;max-width:700px;margin:40px auto;padding:0 24px;color:#1E293B;line-height:1.7;}
+      h1{color:#1E3A8A;font-size:1.6rem;border-bottom:3px solid #F59E0B;padding-bottom:10px;}
+      .meta{color:#64748B;font-size:0.85rem;margin-bottom:24px;}
+      p{font-size:1.05rem;}
+      .footer{margin-top:40px;font-size:0.8rem;color:#94A3B8;text-align:center;}
+    </style></head><body>
+    <h1>${day.summary}</h1>
+    <div class="meta">${day.mat} · Aprova ENEM</div>
+    <p>${text}</p>
+    <div class="footer">Gerado pela plataforma Aprova ENEM — use Ctrl+P para salvar como PDF.</div>
+    </body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  window.open(URL.createObjectURL(blob), '_blank');
+  showNotification('Resumo aberto em uma nova aba — use Ctrl+P para salvar como PDF.', 'success');
+}
+
+// Abre uma pesquisa real sobre o assunto do dia (conteúdo funcional, não fictício)
+function openMaterialArticle(month, week, dayIdx){
+  const day = cronograma[month][week-1].days[dayIdx];
+  const query = encodeURIComponent(day.video + ' resumo ENEM');
+  window.open(`https://www.google.com/search?q=${query}`, '_blank');
+  showNotification(`Abrindo leitura complementar sobre "${day.video}"`, 'info');
+}
+
+// Mostra questões extras (de outros tópicos da mesma matéria) para praticar mais
+function openMaterialExtraExercises(month, week, dayIdx){
+  const day = cronograma[month][week-1].days[dayIdx];
+  const bank = quizDB[day.quizCat] || {};
+  let pool = [];
+  Object.keys(bank).forEach(topic=>{
+    if(topic !== day.quiz){
+      bank[topic].forEach(q=> pool.push(q));
+    }
+  });
+  if(pool.length === 0) pool = bank[day.quiz] || [];
+  // embaralha e pega 3
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  const picked = pool.slice(0,3);
+
+  let html = picked.map((q,qi)=>`
+    <div class="quiz-question">
+      <div class="q-num"><i class="fas fa-question-circle" style="color:var(--gold);margin-right:5px;"></i>Extra ${qi+1}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="quiz-options">
+        ${q.opts.map((opt,oi)=>`<div class="quiz-option" onclick="revealExtraAnswer(this,${oi},${q.correct},'${q.expl.replace(/'/g,"\\'")}')"><span class="opt-letter">${String.fromCharCode(65+oi)}</span><span>${opt}</span></div>`).join('')}
+      </div>
+      <div class="quiz-explanation"></div>
+    </div>
+  `).join('');
+
+  document.getElementById('modalTitle').textContent = 'Exercícios extras';
+  document.getElementById('modalSubtitle').textContent = `Questões bônus de ${subjectDisplayName(day.quizCat)} — prática livre, sem contar no progresso`;
+  document.getElementById('modalBody').innerHTML = `<div class="quiz-container">${html}</div>
+    <button class="week-btn" style="margin-top:10px;" onclick="renderDayContent(${month},${week},${dayIdx},cronograma[${month}][${week-1}])"><i class="fas fa-arrow-left"></i> Voltar para o dia</button>`;
+}
+
+function subjectDisplayName(cat){
+  const map = {mat:'Matemática', port:'Português', human:'Ciências Humanas', nat:'Ciências da Natureza', redacao:'Redação'};
+  return map[cat] || 'Matéria';
+}
+
+// Usado pelas questões extras (não persistidas): mostra se acertou/errou na hora
+function revealExtraAnswer(el, chosenIdx, correctIdx, explanation){
+  const container = el.parentElement;
+  const question = container.parentElement;
+  container.querySelectorAll('.quiz-option').forEach((opt, idx)=>{
+    if(idx === correctIdx) opt.classList.add('correct');
+    else if(idx === chosenIdx) opt.classList.add('wrong');
+  });
+  const fb = question.querySelector('.quiz-explanation');
+  fb.classList.add('show', chosenIdx === correctIdx ? 'ok' : 'no');
+  fb.innerHTML = `<i class="fas ${chosenIdx===correctIdx?'fa-circle-check':'fa-circle-xmark'}"></i> ${explanation}`;
 }
 
 function answerQuiz(month, week, dayIdx, quizName, quizCat, qIdx, optIdx, correctIdx){
@@ -2111,6 +2198,18 @@ function renderAchievements(){
 /* ============================================================
    ADMIN PANEL
    ============================================================ */
+let adminUsersCache = [];
+let adminStatsCache = {};
+
+async function fetchAdminData(){
+  adminUsersCache = await sbGetAllUsers();
+  const { data: statsRows, error } = await sbClient.from('user_stats').select('*');
+  adminStatsCache = {};
+  if(!error && statsRows){
+    statsRows.forEach(s=> adminStatsCache[s.user_id] = s);
+  }
+}
+
 function switchAdminTab(tab){
   document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('active'));
   event.target.closest('.admin-tab').classList.add('active');
@@ -2128,19 +2227,20 @@ function renderAdmin(){
   renderAdminSettings();
 }
 
-function renderAdminUsers(filterText){
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  const entries = Object.entries(users);
-  document.getElementById('adminTotalUsers').textContent = entries.length;
-  
+async function renderAdminUsers(filterText){
+  const tbody = document.getElementById('adminUsersBody');
+  const noUsersEl = document.getElementById('adminNoUsers');
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted);"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>`;
+
+  await fetchAdminData();
+  const users = adminUsersCache;
+  document.getElementById('adminTotalUsers').textContent = users.length;
+
   let activeCount = 0;
   let totalActs = 0;
   let maxStreak = 0;
-  
-  const tbody = document.getElementById('adminUsersBody');
-  const noUsersEl = document.getElementById('adminNoUsers');
-  
-  if(entries.length === 0){
+
+  if(users.length === 0){
     tbody.innerHTML = '';
     noUsersEl.style.display = 'block';
     document.getElementById('adminActiveUsers').textContent = '0';
@@ -2150,17 +2250,15 @@ function renderAdminUsers(filterText){
   }
   noUsersEl.style.display = 'none';
 
-  let filteredEntries = entries;
+  let filtered = users;
   if(filterText){
     const ft = filterText.toLowerCase();
-    filteredEntries = entries.filter(([email, user])=>
-      user.name.toLowerCase().includes(ft) || email.toLowerCase().includes(ft)
-    );
+    filtered = users.filter(u => u.name.toLowerCase().includes(ft) || u.email.toLowerCase().includes(ft));
   }
-  
-  tbody.innerHTML = filteredEntries.map(([email, user])=>{
-    const prog = JSON.parse(localStorage.getItem(`aprova_progress_${email}`)||'{}');
-    const stats2 = JSON.parse(localStorage.getItem(`aprova_stats_${email}`)||'{"xp":0,"streak":0}');
+
+  tbody.innerHTML = filtered.map(u=>{
+    const stats2 = adminStatsCache[u.id] || {xp:0,streak:0,progress:{}};
+    const prog = stats2.progress || {};
     const actCount = Object.keys(prog).filter(k=>prog[k]).length;
     totalActs += actCount;
     const totalPossible = 288;
@@ -2168,20 +2266,20 @@ function renderAdminUsers(filterText){
     if(actCount > 0) activeCount++;
     if((stats2.streak||0) > maxStreak) maxStreak = stats2.streak;
 
-    const created = user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : 'N/A';
-    const initial = user.name.charAt(0).toUpperCase();
+    const created = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : 'N/A';
+    const initial = u.name.charAt(0).toUpperCase();
 
     return `<tr>
-      <td><div class="user-cell"><div class="mini-avatar">${initial}</div><span>${user.name}</span></div></td>
-      <td style="color:var(--muted);font-size:0.82rem;">${email}</td>
+      <td><div class="user-cell"><div class="mini-avatar">${initial}</div><span>${u.name}${u.is_admin ? ' <i class=\"fas fa-shield-halved\" title=\"Admin\" style=\"color:var(--gold-dark);font-size:0.75rem;\"></i>' : ''}</span></div></td>
+      <td style="color:var(--muted);font-size:0.82rem;">${u.email}</td>
       <td style="font-size:0.82rem;">${created}</td>
       <td><strong style="font-size:0.85rem;color:var(--gold-dark);">${stats2.xp||0}</strong></td>
       <td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:70px;"><div class="fill blue" style="width:${pct}%"></div></div><span style="font-weight:700;font-size:0.82rem;">${pct}%</span></div></td>
       <td style="display:flex;gap:4px;flex-wrap:wrap;">
-        <button class="btn-view" onclick="viewAdminUser('${email}')"><i class="fas fa-eye" style="margin-right:3px;"></i>Ver</button>
-        <button class="btn-edit" onclick="showEditUserModal('${email}')"><i class="fas fa-pen" style="margin-right:3px;"></i>Editar</button>
-        <button class="btn-reset" onclick="resetAdminUserProgress('${email}')"><i class="fas fa-rotate-left" style="margin-right:3px;"></i>Resetar</button>
-        <button class="btn-delete" onclick="deleteAdminUser('${email}')"><i class="fas fa-trash" style="margin-right:3px;"></i></button>
+        <button class="btn-view" onclick="viewAdminUser('${u.id}')"><i class="fas fa-eye" style="margin-right:3px;"></i>Ver</button>
+        <button class="btn-edit" onclick="showEditUserModal('${u.id}')"><i class="fas fa-pen" style="margin-right:3px;"></i>Editar</button>
+        <button class="btn-reset" onclick="resetAdminUserProgress('${u.id}')"><i class="fas fa-rotate-left" style="margin-right:3px;"></i>Resetar</button>
+        <button class="btn-delete" onclick="deleteAdminUser('${u.id}')"><i class="fas fa-trash" style="margin-right:3px;"></i></button>
       </td>
     </tr>`;
   }).join('');
@@ -2196,26 +2294,28 @@ function filterAdminUsers(){
   renderAdminUsers(text);
 }
 
-function deleteAdminUser(email){
-  if(!confirm(`Tem certeza que deseja excluir o usu\u00e1rio "${email}"?\nTodas as atividades e progresso ser\u00e3o perdidos!`)) return;
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  delete users[email];
-  localStorage.setItem('aprova_users', JSON.stringify(users));
-  localStorage.removeItem(`aprova_progress_${email}`);
-  localStorage.removeItem(`aprova_stats_${email}`);
-  renderAdminUsers();
-  showToast(`Usu\u00e1rio ${email} exclu\u00eddo.`, 'error');
+async function deleteAdminUser(id){
+  const user = adminUsersCache.find(u=>u.id===id);
+  const label = user ? user.email : id;
+  if(!confirm(`Tem certeza que deseja excluir o usu\u00e1rio "${label}"?\nTodas as atividades e progresso ser\u00e3o perdidos!`)) return;
+  try{
+    await sbDeleteUser(id);
+    await renderAdminUsers();
+    showToast(`Usu\u00e1rio ${label} exclu\u00eddo.`, 'error');
+  }catch(e){
+    showToast('Erro ao excluir usuário. Tente novamente.', 'error');
+  }
 }
 
-function resetAdminUserProgress(email){
-  if(!confirm(`Resetar TODO o progresso de "${email}"?\nIsso zera XP, streak, atividades e conquistas.`)) return;
-  localStorage.removeItem(`aprova_progress_${email}`);
-  localStorage.removeItem(`aprova_stats_${email}`);
-  renderAdminUsers();
+async function resetAdminUserProgress(id){
+  if(!confirm('Resetar TODO o progresso deste aluno?\nIsso zera XP, streak, horas, atividades e conquistas.')) return;
+  await sbClient.from('user_stats').update({xp:0, streak:0, study_minutes:0, badges:[], progress:{}}).eq('user_id', id);
+  await sbClient.from('study_sessions').delete().eq('user_id', id);
+  await renderAdminUsers();
   if(document.getElementById('adminUserDetail').style.display !== 'none'){
-    viewAdminUser(email);
+    viewAdminUser(id);
   }
-  showToast(`Progresso de ${email} resetado.`, 'warning');
+  showToast('Progresso do aluno resetado.', 'warning');
 }
 
 /* ===== ADMIN: CREATE USER ===== */
@@ -2233,7 +2333,7 @@ function closeCreateUserModal(){
   document.body.style.overflow = '';
 }
 
-function confirmCreateUser(){
+async function confirmCreateUser(){
   const name = document.getElementById('newUserName').value.trim();
   const email = document.getElementById('newUserEmail').value.trim().toLowerCase();
   const pass = document.getElementById('newUserPass').value;
@@ -2243,28 +2343,31 @@ function confirmCreateUser(){
   if(!email){errEl.textContent='E-mail é obrigatório.';errEl.style.display='block';return;}
   if(!pass || pass.length < 6){errEl.textContent='Senha deve ter no mínimo 6 caracteres.';errEl.style.display='block';return;}
 
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  if(users[email]){
+  const existing = await sbGetUserByEmail(email);
+  if(existing){
     errEl.textContent='Já existe um usuário com este e-mail.';
     errEl.style.display='block';return;
   }
 
-  users[email] = {name, email, password: pass, createdAt: new Date().toISOString()};
-  localStorage.setItem('aprova_users', JSON.stringify(users));
-  closeCreateUserModal();
-  renderAdminUsers();
-  showToast(`Aluno "${name}" criado com sucesso!`, 'success');
+  try{
+    await sbCreateUser({name, email, password: pass, is_admin:false});
+    closeCreateUserModal();
+    await renderAdminUsers();
+    showToast(`Aluno "${name}" criado com sucesso!`, 'success');
+  }catch(e){
+    errEl.textContent='Erro ao criar aluno. Verifique a conexão com o Supabase e tente novamente.';
+    errEl.style.display='block';
+  }
 }
 
 /* ===== ADMIN: EDIT USER ===== */
-function showEditUserModal(email){
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  const user = users[email];
+function showEditUserModal(id){
+  const user = adminUsersCache.find(u=>u.id===id);
   if(!user) return;
   document.getElementById('editUserModal').classList.add('show');
   document.body.style.overflow = 'hidden';
   document.getElementById('editUserError').style.display = 'none';
-  document.getElementById('editUserOldEmail').value = email;
+  document.getElementById('editUserOldEmail').value = id;
   document.getElementById('editUserName').value = user.name;
   document.getElementById('editUserEmail').value = user.email;
   document.getElementById('editUserPass').value = '';
@@ -2275,8 +2378,8 @@ function closeEditUserModal(){
   document.body.style.overflow = '';
 }
 
-function confirmEditUser(){
-  const oldEmail = document.getElementById('editUserOldEmail').value;
+async function confirmEditUser(){
+  const id = document.getElementById('editUserOldEmail').value;
   const name = document.getElementById('editUserName').value.trim();
   const email = document.getElementById('editUserEmail').value.trim().toLowerCase();
   const pass = document.getElementById('editUserPass').value;
@@ -2285,48 +2388,36 @@ function confirmEditUser(){
   if(!name){errEl.textContent='Nome é obrigatório.';errEl.style.display='block';return;}
   if(!email){errEl.textContent='E-mail é obrigatório.';errEl.style.display='block';return;}
 
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  if(users[oldEmail] && email !== oldEmail && users[email]){
+  const existing = await sbGetUserByEmail(email);
+  if(existing && existing.id !== id){
     errEl.textContent='Já existe um usuário com este e-mail.';
     errEl.style.display='block';return;
   }
 
-  const user = users[oldEmail];
-  user.name = name;
-  user.email = email;
-  if(pass) user.password = pass;
+  const fields = {name, email};
+  if(pass) fields.password = pass;
 
-  if(email !== oldEmail){
-    delete users[oldEmail];
-    users[email] = user;
-    const prog = localStorage.getItem(`aprova_progress_${oldEmail}`);
-    if(prog) {
-      localStorage.setItem(`aprova_progress_${email}`, prog);
-      localStorage.removeItem(`aprova_progress_${oldEmail}`);
+  try{
+    await sbUpdateUser(id, fields);
+    closeEditUserModal();
+    await renderAdminUsers();
+    if(document.getElementById('adminUserDetail').style.display !== 'none'){
+      viewAdminUser(id);
     }
-    const stats = localStorage.getItem(`aprova_stats_${oldEmail}`);
-    if(stats) {
-      localStorage.setItem(`aprova_stats_${email}`, stats);
-      localStorage.removeItem(`aprova_stats_${oldEmail}`);
-    }
+    showToast(`Dados de "${name}" atualizados com sucesso!`, 'success');
+  }catch(e){
+    errEl.textContent='Erro ao salvar. Tente novamente.';
+    errEl.style.display='block';
   }
-
-  localStorage.setItem('aprova_users', JSON.stringify(users));
-  closeEditUserModal();
-  renderAdminUsers();
-  if(document.getElementById('adminUserDetail').style.display !== 'none'){
-    viewAdminUser(email);
-  }
-  showToast(`Dados de "${name}" atualizados com sucesso!`, 'success');
 }
 
 /* ===== ADMIN: VIEW USER (with real progress by subject) ===== */
-function viewAdminUser(email){
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  const user = users[email];
+async function viewAdminUser(id){
+  if(!adminUsersCache.length) await fetchAdminData();
+  const user = adminUsersCache.find(u=>u.id===id);
   if(!user) return;
-  const prog = JSON.parse(localStorage.getItem(`aprova_progress_${email}`)||'{}');
-  const stats2 = JSON.parse(localStorage.getItem(`aprova_stats_${email}`)||'{"xp":0,"streak":0}');
+  const stats2 = adminStatsCache[id] || {xp:0, streak:0, progress:{}};
+  const prog = stats2.progress || {};
   const actCount = Object.keys(prog).filter(k=>prog[k]).length;
   const totalPossible = 288;
   const pct = totalPossible > 0 ? Math.round(actCount/totalPossible*100) : 0;
@@ -2376,9 +2467,9 @@ function viewAdminUser(email){
         <button onclick="document.getElementById('adminUserDetail').style.display='none';document.getElementById('adminUsersTab').style.display='block';renderAdminUsers();" style="padding:8px 14px;border-radius:8px;background:var(--blue-50);color:var(--blue);font-size:0.82rem;font-weight:600;border:none;cursor:pointer;"><i class="fas fa-arrow-left" style="margin-right:4px;"></i>Voltar</button>
       </div>
       <div style="margin-bottom:20px;font-size:0.88rem;color:var(--muted);line-height:1.8;">
-        <p><strong>E-mail:</strong> ${email}</p>
-        <p><strong>Cadastro:</strong> ${user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : 'N/A'}</p>
-        <p><strong>XP:</strong> ${stats2.xp || 0} | <strong>Streak:</strong> ${stats2.streak || 0} dias | <strong>Nível:</strong> ${Math.floor((stats2.xp||0)/100)+1}</p>
+        <p><strong>E-mail:</strong> ${user.email}</p>
+        <p><strong>Cadastro:</strong> ${user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : 'N/A'}</p>
+        <p><strong>XP:</strong> ${stats2.xp || 0} | <strong>Streak:</strong> ${stats2.streak || 0} dias | <strong>Nível:</strong> ${Math.floor((stats2.xp||0)/100)+1} | <strong>Horas de estudo:</strong> ${Math.round(((stats2.study_minutes||0)/60)*10)/10}h</p>
         <p><strong>Atividades:</strong> ${actCount} / ${totalPossible} (${pct}%)</p>
       </div>
       <h4 style="margin-bottom:12px;font-size:0.95rem;color:var(--blue-dark);">Progresso por área:</h4>
@@ -2405,17 +2496,19 @@ function viewAdminUser(email){
         </div>
       </div>
       <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px;">
-        <button class="btn-admin-action blue" onclick="showEditUserModal('${email}')"><i class="fas fa-pen-to-square"></i>Editar</button>
-        <button class="btn-admin-action danger" onclick="resetAdminUserProgress('${email}');viewAdminUser('${email}')"><i class="fas fa-rotate-left"></i>Resetar Progresso</button>
-        <button class="btn-admin-action danger" onclick="deleteAdminUser('${email}')"><i class="fas fa-trash"></i>Excluir Conta</button>
+        <button class="btn-admin-action blue" onclick="showEditUserModal('${id}')"><i class="fas fa-pen-to-square"></i>Editar</button>
+        <button class="btn-admin-action danger" onclick="resetAdminUserProgress('${id}')"><i class="fas fa-rotate-left"></i>Resetar Progresso</button>
+        <button class="btn-admin-action danger" onclick="deleteAdminUser('${id}')"><i class="fas fa-trash"></i>Excluir Conta</button>
       </div>
     </div>
   `;
 }
 
-function renderAdminStats(){
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  const entries = Object.entries(users);
+async function renderAdminStats(){
+  const el = document.getElementById('adminStatsTab');
+  el.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);"><i class="fas fa-spinner fa-spin"></i> Carregando estatísticas...</div>`;
+  await fetchAdminData();
+  const users = adminUsersCache;
   let totalXP = 0;
   let totalActs = 0;
   let maxStreak = 0;
@@ -2423,9 +2516,9 @@ function renderAdminStats(){
 
   const subjTotals = {mat:0, matTotal:0, port:0, portTotal:0, human:0, humanTotal:0, nat:0, natTotal:0};
 
-  entries.forEach(([email])=>{
-    const stats2 = JSON.parse(localStorage.getItem(`aprova_stats_${email}`)||'{"xp":0,"streak":0}');
-    const prog = JSON.parse(localStorage.getItem(`aprova_progress_${email}`)||'{}');
+  users.forEach(u=>{
+    const stats2 = adminStatsCache[u.id] || {xp:0,streak:0,progress:{}};
+    const prog = stats2.progress || {};
     totalXP += stats2.xp || 0;
     const acts = Object.keys(prog).filter(k=>prog[k]).length;
     totalActs += acts;
@@ -2456,9 +2549,8 @@ function renderAdminStats(){
   const portPct = subjTotals.portTotal > 0 ? Math.round(subjTotals.port/subjTotals.portTotal*100) : 0;
   const humanPct = subjTotals.humanTotal > 0 ? Math.round(subjTotals.human/subjTotals.humanTotal*100) : 0;
   const natPct = subjTotals.natTotal > 0 ? Math.round(subjTotals.nat/subjTotals.natTotal*100) : 0;
-  const avgProgress = entries.length > 0 ? Math.round(totalActs/entries.length/totalPossible*100) : 0;
+  const avgProgress = users.length > 0 ? Math.round(totalActs/users.length/totalPossible*100) : 0;
 
-  const el = document.getElementById('adminStatsTab');
   el.innerHTML = `
     <div class="admin-stats">
       <div class="admin-stat"><div class="as-icon" style="color:var(--blue);"><i class="fas fa-bolt"></i></div><div class="as-value">${totalXP}</div><div class="as-label">XP total de todos os alunos</div></div>
@@ -2469,7 +2561,7 @@ function renderAdminStats(){
     <div class="admin-detail">
       <h3><i class="fas fa-chart-bar" style="margin-right:6px;color:var(--blue);"></i>Visão geral da plataforma</h3>
       <p style="font-size:0.88rem;color:var(--muted);line-height:1.7;margin-bottom:16px;">
-        <strong>${entries.length}</strong> alunos cadastrados.
+        <strong>${users.length}</strong> alunos cadastrados.
         <strong>${totalActs}</strong> atividades concluídas no total.
         <strong>${totalXP}</strong> XP distribuídos.
         Maior sequência de estudos: <strong>${maxStreak} dias</strong>.
@@ -2506,8 +2598,8 @@ function renderAdminSettings(){
   const el = document.getElementById('adminSettingsTab');
   el.innerHTML = `
     <div class="admin-settings-card">
-      <h3><i class="fas fa-key" style="color:var(--blue);"></i>Credenciais de Acesso</h3>
-      <p>Usuário e senha padrão para acessar este painel administrativo.</p>
+      <h3><i class="fas fa-key" style="color:var(--blue);"></i>Credenciais de Acesso ao Painel</h3>
+      <p>Usuário e senha para acessar este painel administrativo (separado da conta dos alunos).</p>
       <div class="admin-credential">
         <p><strong>Usuário:</strong> <code>admin</code></p>
         <p><strong>Senha:</strong> <code>admin123</code></p>
@@ -2527,12 +2619,12 @@ function renderAdminSettings(){
     </div>
     <div class="admin-settings-card">
       <h3><i class="fas fa-file-export" style="color:var(--success);"></i>Exportar Dados</h3>
-      <p>Exporte todos os dados dos alunos em formato CSV para análise.</p>
+      <p>Exporte todos os dados dos alunos (vindos do Supabase) em formato CSV para análise.</p>
       <button class="btn-admin-action blue" onclick="exportAdminData()"><i class="fas fa-download"></i>Baixar CSV</button>
     </div>
     <div class="admin-settings-card">
       <h3><i class="fas fa-trash-can" style="color:var(--danger);"></i>Zona de Perigo</h3>
-      <p style="color:var(--danger);">Ações irreversíveis. Tenha cuidado!</p>
+      <p style="color:var(--danger);">Ações irreversíveis — afetam os dados reais no Supabase. Tenha cuidado!</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <button class="btn-admin-action danger" onclick="resetAllProgress()"><i class="fas fa-rotate-left"></i>Resetar Todos os Progressos</button>
         <button class="btn-admin-action danger" onclick="deleteAllUsers()"><i class="fas fa-skull-crossbones"></i>Excluir Todos os Alunos</button>
@@ -2549,19 +2641,20 @@ function saveAdminCredentials(){
   showToast('Credenciais atualizadas com sucesso!','success');
 }
 
-function exportAdminData(){
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  const entries = Object.entries(users);
-  if(entries.length === 0){showToast('Nenhum dado para exportar.','warning');return;}
+async function exportAdminData(){
+  await fetchAdminData();
+  const users = adminUsersCache;
+  if(users.length === 0){showToast('Nenhum dado para exportar.','warning');return;}
 
-  let csv = 'Nome,E-mail,Cadastro,XP,Streak,Progresso(%),Atividades\n';
-  entries.forEach(([email, user])=>{
-    const prog = JSON.parse(localStorage.getItem(`aprova_progress_${email}`)||'{}');
-    const stats2 = JSON.parse(localStorage.getItem(`aprova_stats_${email}`)||'{"xp":0,"streak":0}');
+  let csv = 'Nome,E-mail,Cadastro,XP,Streak,Horas,Progresso(%),Atividades\n';
+  users.forEach(u=>{
+    const stats2 = adminStatsCache[u.id] || {xp:0,streak:0,progress:{},study_minutes:0};
+    const prog = stats2.progress || {};
     const actCount = Object.keys(prog).filter(k=>prog[k]).length;
     const pct = Math.round(actCount/288*100);
-    const created = user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : 'N/A';
-    csv += `"${user.name}",${email},${created},${stats2.xp||0},${stats2.streak||0},${pct},${actCount}\n`;
+    const hours = Math.round(((stats2.study_minutes||0)/60)*10)/10;
+    const created = u.created_at ? new Date(u.created_at).toLocaleDateString('pt-BR') : 'N/A';
+    csv += `"${u.name}",${u.email},${created},${stats2.xp||0},${stats2.streak||0},${hours},${pct},${actCount}\n`;
   });
 
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
@@ -2572,30 +2665,25 @@ function exportAdminData(){
   showToast('Dados exportados com sucesso!','success');
 }
 
-function resetAllProgress(){
-  if(!confirm('ATENÇÃO: Isso vai resetar o progresso de TODOS os alunos.\nXP, streak, atividades e conquistas serão zerados.\nDeseja continuar?')) return;
+async function resetAllProgress(){
+  if(!confirm('ATENÇÃO: Isso vai resetar o progresso de TODOS os alunos.\nXP, streak, horas, atividades e conquistas serão zerados.\nDeseja continuar?')) return;
   if(!confirm('Tem certeza absoluta? Esta ação é irreversível!')) return;
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  Object.keys(users).forEach(email=>{
-    localStorage.removeItem(`aprova_progress_${email}`);
-    localStorage.removeItem(`aprova_stats_${email}`);
-  });
-  renderAdminUsers();
-  renderAdminStats();
+  await fetchAdminData();
+  await Promise.all(adminUsersCache.map(u=>
+    sbClient.from('user_stats').update({xp:0, streak:0, study_minutes:0, badges:[], progress:{}}).eq('user_id', u.id)
+  ));
+  await sbClient.from('study_sessions').delete().not('id','is',null);
+  await renderAdminUsers();
+  await renderAdminStats();
   showToast('Todos os progressos foram resetados.','error');
 }
 
-function deleteAllUsers(){
+async function deleteAllUsers(){
   if(!confirm('ATENÇÃO: Isso vai excluir TODOS os alunos e todos os dados.\nEsta ação é IRREVERSÍVEL.\nDeseja continuar?')) return;
   if(!confirm('Tem certeza ABSOLUTA? Tudo será perdido!')) return;
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  Object.keys(users).forEach(email=>{
-    localStorage.removeItem(`aprova_progress_${email}`);
-    localStorage.removeItem(`aprova_stats_${email}`);
-  });
-  localStorage.setItem('aprova_users','{}');
-  renderAdminUsers();
-  renderAdminStats();
+  await sbClient.from('users').delete().not('id','is',null);
+  await renderAdminUsers();
+  await renderAdminStats();
   renderAdminSettings();
   showToast('Todos os alunos foram excluídos.','error');
 }
@@ -2667,7 +2755,7 @@ function resetTimer(){
 }
 
 // Finaliza a sessão: soma o tempo às horas estudadas do usuário e reseta o cronômetro
-function finishTimer(){
+async function finishTimer(){
   if(timerSeconds < 1){
     showNotification('Inicie o cronômetro antes de finalizar a sessão.', 'info');
     return;
@@ -2680,9 +2768,10 @@ function finishTimer(){
   const minutesStudied = Math.max(1, Math.round(timerSeconds/60));
 
   if(!currentUser){ resetTimer(); return; }
-  const stats = JSON.parse(localStorage.getItem(`aprova_stats_${currentUser}`)||'{"xp":0,"streak":0}');
-  stats.studyMinutes = (stats.studyMinutes||0) + minutesStudied;
-  localStorage.setItem(`aprova_stats_${currentUser}`, JSON.stringify(stats));
+
+  await sbInsertSession(currentUser.id, subjectLabel, minutesStudied);
+  studyMinutesTotal += minutesStudied;
+  await sbUpsertStats(currentUser.id, {study_minutes: studyMinutesTotal});
 
   showNotification(`Sessão de ${subjectLabel} registrada: ${minutesStudied} min!`, 'success');
   addXP(Math.min(20, Math.round(minutesStudied/5))); // pequena recompensa por estudar
@@ -2696,39 +2785,30 @@ function finishTimer(){
 }
 
 /* ------------------------------------------------------------
-   2) RANKING (Semanal / Mensal)
+   2) RANKING (Semanal / Mensal) — dados reais do Supabase
    ------------------------------------------------------------ */
 let currentRankingType = 'semanal';
 
-// Dados de exemplo (mock) para o ranking — em produção viriam do backend
-function loadRankingPreview(type){
-  const mockWeekly = [
-    {name:'Marina Souza', hours:14, days:6},
-    {name:'Lucas Andrade', hours:12, days:6},
-    {name:'Beatriz Lima', hours:11, days:5},
-    {name:'Pedro Henrique', hours:9, days:5},
-    {name:'Camila Rocha', hours:8, days:4}
-  ];
-  const mockMonthly = [
-    {name:'Beatriz Lima', hours:48, days:24},
-    {name:'Marina Souza', hours:45, days:22},
-    {name:'Rafael Torres', hours:40, days:20},
-    {name:'Lucas Andrade', hours:37, days:19},
-    {name:'Camila Rocha', hours:33, days:17}
-  ];
+// Busca as sessões de estudo reais registradas no Supabase e agrega por aluno
+async function fetchRankingReal(type){
+  const days = type === 'mensal' ? 30 : 7;
+  const since = new Date(Date.now() - days*24*60*60*1000).toISOString();
+  const rows = await sbFetchSessionsSince(since);
 
-  // Inclui o usuário atual na lista, com base nas horas/streak reais dele
-  let ranking = type === 'mensal' ? mockMonthly.slice() : mockWeekly.slice();
-  if(currentUser){
-    const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-    const user = users[currentUser];
-    const stats = JSON.parse(localStorage.getItem(`aprova_stats_${currentUser}`)||'{"xp":0,"streak":0,"studyMinutes":0}');
-    const myHours = Math.round((stats.studyMinutes||0)/60);
-    const myDays = calculateStats().totalDays;
-    if(user){
-      ranking.push({name: user.name + ' (você)', hours: myHours, days: myDays});
-    }
-  }
+  const map = {};
+  rows.forEach(r=>{
+    const uid = r.user_id;
+    const name = (r.users && r.users.name) ? r.users.name : 'Aluno';
+    if(!map[uid]) map[uid] = {name, minutes:0, days:new Set()};
+    map[uid].minutes += r.minutes;
+    map[uid].days.add(new Date(r.created_at).toDateString());
+  });
+
+  let ranking = Object.entries(map).map(([uid, u])=>({
+    name: (currentUser && uid === currentUser.id) ? u.name + ' (você)' : u.name,
+    hours: Math.round((u.minutes/60)*10)/10,
+    days: u.days.size
+  }));
   ranking.sort((a,b)=> b.hours - a.hours);
   return ranking.slice(0,5);
 }
@@ -2742,10 +2822,18 @@ function switchRankingType(type){
   renderRanking();
 }
 
-function renderRanking(){
+async function renderRanking(){
   const el = document.getElementById('rankingList');
   if(!el) return;
-  const data = loadRankingPreview(currentRankingType);
+  el.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);"><i class="fas fa-spinner fa-spin"></i> Carregando ranking...</div>`;
+
+  const data = await fetchRankingReal(currentRankingType);
+
+  if(data.length === 0){
+    el.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);">Ainda não há sessões de estudo registradas neste período.<br>Use o cronômetro na Dashboard para aparecer aqui!</div>`;
+    return;
+  }
+
   const medalColors = ['#F59E0B','#94A3B8','#B45309'];
   el.innerHTML = data.map((r,i)=>{
     const medal = i < 3
@@ -2806,9 +2894,11 @@ function renderMaterialsPage(){
   `).join('');
 }
 
-// Abre (simuladamente) um material ao clicar
+// Abre uma pesquisa real sobre o material clicado (conteúdo funcional, não fictício)
 function openMaterial(title){
-  showNotification(`Abrindo material: ${title}`, 'info');
+  const query = encodeURIComponent(title + ' ENEM');
+  window.open(`https://www.google.com/search?q=${query}`, '_blank');
+  showNotification(`Abrindo: ${title}`, 'info');
 }
 
 /* ------------------------------------------------------------
@@ -2817,14 +2907,7 @@ function openMaterial(title){
 function checkAdminAccess(){
   const navLink = document.getElementById('adminNavLink');
   const mobileLink = document.getElementById('adminNavLinkMobile');
-  if(!currentUser){
-    if(navLink) navLink.style.display = 'none';
-    if(mobileLink) mobileLink.style.display = 'none';
-    return;
-  }
-  const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-  const user = users[currentUser];
-  const isAdmin = !!(user && user.isAdmin);
+  const isAdmin = !!(currentUser && currentUser.is_admin);
   if(navLink) navLink.style.display = isAdmin ? 'flex' : 'none';
   if(mobileLink) mobileLink.style.display = isAdmin ? 'flex' : 'none';
 }
@@ -2940,13 +3023,15 @@ window.addEventListener('scroll',()=>{
 // Atualiza o display do cronômetro assim que a página carrega
 updateTimerDisplay();
 
-// Auto-login check
-(function(){
-  const current = localStorage.getItem('aprova_current');
-  if(current){
-    const users = JSON.parse(localStorage.getItem('aprova_users')||'{}');
-    if(users[current]){
-      enterApp(current);
+// Auto-login check (agora busca o usuário no Supabase pelo id salvo)
+(async function(){
+  const id = localStorage.getItem('aprova_current_id');
+  if(id){
+    const { data, error } = await sbClient.from('users').select('*').eq('id', id).maybeSingle();
+    if(!error && data){
+      await enterApp(data);
+    } else {
+      localStorage.removeItem('aprova_current_id');
     }
   }
 })();
