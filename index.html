@@ -430,33 +430,9 @@ input,textarea,select{font-family:inherit;}
       </div>
       <button class="auth-btn" type="submit"><i class="fas fa-arrow-right-to-bracket" style="margin-right:8px;"></i>Entrar</button>
     </form>
-    <div style="text-align:center;margin-top:16px;font-size:0.8rem;color:var(--muted);">
-      <a onclick="showAdminLogin()" style="color:var(--blue);cursor:pointer;font-weight:600;"><i class="fas fa-shield-halved" style="margin-right:4px;"></i>Acesso Admin</a>
+    <div style="text-align:center;margin-top:16px;font-size:0.78rem;color:var(--muted);">
+      <i class="fas fa-circle-info" style="margin-right:4px;"></i>Sua conta é criada pelo administrador da plataforma.
     </div>
-  </div>
-</div>
-
-<!-- ===== ADMIN LOGIN ===== -->
-<div id="adminLoginScreen" class="auth-wrapper" style="display:none;">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <i class="fas fa-shield-halved" style="color:var(--blue-dark);"></i>
-      <h1>Painel <span style="color:var(--gold);">Administrativo</span></h1>
-      <p>Acesso restrito a administradores</p>
-    </div>
-    <div class="auth-error" id="adminError"></div>
-    <form class="auth-form" id="adminForm" onsubmit="return doAdminLogin(event)">
-      <div class="field">
-        <label><i class="fas fa-user-shield" style="color:var(--blue);margin-right:6px;"></i>Usu&aacute;rio</label>
-        <input type="text" id="adminUser" placeholder="admin" required>
-      </div>
-      <div class="field">
-        <label><i class="fas fa-lock" style="color:var(--blue);margin-right:6px;"></i>Senha</label>
-        <input type="password" id="adminPass" placeholder="Senha do admin" required>
-      </div>
-      <button class="auth-btn" type="submit"><i class="fas fa-lock-open" style="margin-right:8px;"></i>Acessar Painel</button>
-    </form>
-    <div class="auth-switch"><a onclick="showLogin()"><i class="fas fa-arrow-left" style="margin-right:4px;"></i>Voltar ao login</a></div>
   </div>
 </div>
 
@@ -762,29 +738,10 @@ const SUPABASE_URL = 'https://knyafqpszvkzrkoixezv.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_Bi2hijYRqEC9JsanVCCa9g_MPJkw7Ch';
 const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-async function sbGetUserByEmail(email){
-  const { data, error } = await sbClient.from('users').select('*').eq('email', email).maybeSingle();
-  if(error){ console.error('Erro ao buscar usuário:', error); return null; }
+async function sbGetProfile(id){
+  const { data, error } = await sbClient.from('profiles').select('*').eq('id', id).maybeSingle();
+  if(error){ console.error('Erro ao buscar perfil:', error); return null; }
   return data;
-}
-async function sbGetAllUsers(){
-  const { data, error } = await sbClient.from('users').select('*').order('created_at', {ascending:false});
-  if(error){ console.error('Erro ao listar usuários:', error); return []; }
-  return data || [];
-}
-async function sbCreateUser(user){
-  const { data, error } = await sbClient.from('users').insert(user).select().maybeSingle();
-  if(error) throw error;
-  await sbClient.from('user_stats').insert({user_id:data.id, xp:0, streak:0, study_minutes:0, badges:[], progress:{}});
-  return data;
-}
-async function sbUpdateUser(id, fields){
-  const { error } = await sbClient.from('users').update(fields).eq('id', id);
-  if(error) throw error;
-}
-async function sbDeleteUser(id){
-  const { error } = await sbClient.from('users').delete().eq('id', id);
-  if(error) throw error;
 }
 async function sbGetStats(userId){
   const { data, error } = await sbClient.from('user_stats').select('*').eq('user_id', userId).maybeSingle();
@@ -799,10 +756,14 @@ async function sbInsertSession(userId, subject, minutes){
   const { error } = await sbClient.from('study_sessions').insert({user_id:userId, subject, minutes});
   if(error) console.error('Erro ao salvar sessão de estudo:', error);
 }
-async function sbFetchSessionsSince(sinceISO){
-  const { data, error } = await sbClient.from('study_sessions').select('user_id, minutes, created_at, users(name)').gte('created_at', sinceISO);
-  if(error){ console.error('Erro ao buscar sessões:', error); return []; }
-  return data || [];
+// Chama a Edge Function "admin-users" (roda com a service_role key no
+// servidor; o navegador só envia o token da sessão do admin logado).
+async function sbAdminAction(action, payload){
+  const { data, error } = await sbClient.functions.invoke('admin-users', { body: { action, payload } });
+  if(error){
+    return { success:false, error: (error.message || 'Falha ao chamar a função administrativa.') };
+  }
+  return data;
 }
 
 /* ============================================================
@@ -1439,16 +1400,12 @@ let streak = 0;
 let earnedBadges = new Set();
 
 /* ============================================================
-   AUTH SYSTEM (agora consultando o Supabase — sem auto-cadastro;
-   contas de aluno só são criadas pelo painel Admin)
+   AUTH SYSTEM (Supabase Auth — login/senha reais, com hash
+   cuidado pelo próprio Supabase; sem auto-cadastro — contas de
+   aluno só são criadas pelo painel Admin, via Edge Function)
    ============================================================ */
 function showLogin(){
-  document.getElementById('adminLoginScreen').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
-}
-function showAdminLogin(){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('adminLoginScreen').style.display='flex';
 }
 
 async function doLogin(e){
@@ -1461,44 +1418,31 @@ async function doLogin(e){
   const submitBtn = e.target.querySelector('button[type="submit"]');
   if(submitBtn) submitBtn.disabled = true;
 
-  const user = await sbGetUserByEmail(email);
+  const { data, error } = await sbClient.auth.signInWithPassword({ email, password: pass });
 
+  if(error){
+    if(submitBtn) submitBtn.disabled = false;
+    errEl.textContent = 'E-mail ou senha incorretos.';
+    errEl.style.display='block';
+    return false;
+  }
+
+  const profile = await sbGetProfile(data.user.id);
   if(submitBtn) submitBtn.disabled = false;
 
-  if(!user){
-    errEl.textContent='E-mail não encontrado. Peça ao administrador para criar sua conta.';
+  if(!profile){
+    errEl.textContent = 'Sua conta ainda não tem um perfil configurado. Fale com o administrador.';
     errEl.style.display='block';
+    await sbClient.auth.signOut();
     return false;
   }
-  if(user.password !== pass){
-    errEl.textContent='Senha incorreta. Tente novamente.';
-    errEl.style.display='block';
-    return false;
-  }
-  localStorage.setItem('aprova_current_id', user.id);
-  await enterApp(user);
+
+  await enterApp({ id: data.user.id, name: profile.name, email: profile.email, is_admin: profile.is_admin });
   return false;
 }
 
-function doAdminLogin(e){
-  e.preventDefault();
-  const user = document.getElementById('adminUser').value.trim();
-  const pass = document.getElementById('adminPass').value;
-  const errEl = document.getElementById('adminError');
-  // Credencial de acesso ao painel (separada da tabela de alunos)
-  const adminUsers = JSON.parse(localStorage.getItem('aprova_admins')||'{"02n01":"04n01"}');
-  if(adminUsers[user] && adminUsers[user] === pass){
-    errEl.style.display='none';
-    enterAdmin();
-  } else {
-    errEl.textContent='Credenciais inválidas.';
-    errEl.style.display='block';
-  }
-  return false;
-}
-
-function doLogout(){
-  localStorage.removeItem('aprova_current_id');
+async function doLogout(){
+  await sbClient.auth.signOut();
   currentUser = null;
   document.getElementById('mainApp').style.display='none';
   document.getElementById('adminPanel').style.display='none';
@@ -1512,7 +1456,6 @@ async function enterApp(user){
   currentUser = user;
 
   document.getElementById('loginScreen').style.display='none';
-  document.getElementById('adminLoginScreen').style.display='none';
   document.getElementById('mainApp').style.display='block';
   document.getElementById('appFooter').style.display='block';
 
@@ -1537,8 +1480,6 @@ async function enterApp(user){
 }
 
 function enterAdmin(){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('adminLoginScreen').style.display='none';
   document.getElementById('mainApp').style.display='none';
   document.getElementById('adminPanel').style.display='block';
   document.getElementById('appFooter').style.display='none';
@@ -1549,7 +1490,8 @@ function enterAdmin(){
 function exitAdmin(){
   document.getElementById('adminPanel').style.display='none';
   document.getElementById('appFooter').style.display='block';
-  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('mainApp').style.display='block';
+  navigateTo('dashboard');
 }
 
 /* ============================================================
@@ -2202,10 +2144,11 @@ let adminUsersCache = [];
 let adminStatsCache = {};
 
 async function fetchAdminData(){
-  adminUsersCache = await sbGetAllUsers();
-  const { data: statsRows, error } = await sbClient.from('user_stats').select('*');
+  const { data: profiles, error } = await sbClient.from('profiles').select('*').order('created_at', {ascending:false});
+  adminUsersCache = error ? [] : (profiles || []);
+  const { data: statsRows, error: statsErr } = await sbClient.from('user_stats').select('*');
   adminStatsCache = {};
-  if(!error && statsRows){
+  if(!statsErr && statsRows){
     statsRows.forEach(s=> adminStatsCache[s.user_id] = s);
   }
 }
@@ -2298,19 +2241,22 @@ async function deleteAdminUser(id){
   const user = adminUsersCache.find(u=>u.id===id);
   const label = user ? user.email : id;
   if(!confirm(`Tem certeza que deseja excluir o usu\u00e1rio "${label}"?\nTodas as atividades e progresso ser\u00e3o perdidos!`)) return;
-  try{
-    await sbDeleteUser(id);
+  const result = await sbAdminAction('delete', { id });
+  if(result.success){
     await renderAdminUsers();
     showToast(`Usu\u00e1rio ${label} exclu\u00eddo.`, 'error');
-  }catch(e){
-    showToast('Erro ao excluir usuário. Tente novamente.', 'error');
+  } else {
+    showToast(result.error || 'Erro ao excluir usuário. Tente novamente.', 'error');
   }
 }
 
 async function resetAdminUserProgress(id){
   if(!confirm('Resetar TODO o progresso deste aluno?\nIsso zera XP, streak, horas, atividades e conquistas.')) return;
-  await sbClient.from('user_stats').update({xp:0, streak:0, study_minutes:0, badges:[], progress:{}}).eq('user_id', id);
-  await sbClient.from('study_sessions').delete().eq('user_id', id);
+  const result = await sbAdminAction('resetProgress', { id });
+  if(!result.success){
+    showToast(result.error || 'Erro ao resetar progresso.', 'error');
+    return;
+  }
   await renderAdminUsers();
   if(document.getElementById('adminUserDetail').style.display !== 'none'){
     viewAdminUser(id);
@@ -2343,19 +2289,13 @@ async function confirmCreateUser(){
   if(!email){errEl.textContent='E-mail é obrigatório.';errEl.style.display='block';return;}
   if(!pass || pass.length < 6){errEl.textContent='Senha deve ter no mínimo 6 caracteres.';errEl.style.display='block';return;}
 
-  const existing = await sbGetUserByEmail(email);
-  if(existing){
-    errEl.textContent='Já existe um usuário com este e-mail.';
-    errEl.style.display='block';return;
-  }
-
-  try{
-    await sbCreateUser({name, email, password: pass, is_admin:false});
+  const result = await sbAdminAction('create', { name, email, password: pass });
+  if(result.success){
     closeCreateUserModal();
     await renderAdminUsers();
     showToast(`Aluno "${name}" criado com sucesso!`, 'success');
-  }catch(e){
-    errEl.textContent='Erro ao criar aluno. Verifique a conexão com o Supabase e tente novamente.';
+  } else {
+    errEl.textContent = result.error || 'Erro ao criar aluno. Tente novamente.';
     errEl.style.display='block';
   }
 }
@@ -2387,26 +2327,21 @@ async function confirmEditUser(){
 
   if(!name){errEl.textContent='Nome é obrigatório.';errEl.style.display='block';return;}
   if(!email){errEl.textContent='E-mail é obrigatório.';errEl.style.display='block';return;}
+  if(pass && pass.length < 6){errEl.textContent='A nova senha precisa ter no mínimo 6 caracteres.';errEl.style.display='block';return;}
 
-  const existing = await sbGetUserByEmail(email);
-  if(existing && existing.id !== id){
-    errEl.textContent='Já existe um usuário com este e-mail.';
-    errEl.style.display='block';return;
-  }
+  const payload = { id, name, email };
+  if(pass) payload.password = pass;
 
-  const fields = {name, email};
-  if(pass) fields.password = pass;
-
-  try{
-    await sbUpdateUser(id, fields);
+  const result = await sbAdminAction('update', payload);
+  if(result.success){
     closeEditUserModal();
     await renderAdminUsers();
     if(document.getElementById('adminUserDetail').style.display !== 'none'){
       viewAdminUser(id);
     }
     showToast(`Dados de "${name}" atualizados com sucesso!`, 'success');
-  }catch(e){
-    errEl.textContent='Erro ao salvar. Tente novamente.';
+  } else {
+    errEl.textContent = result.error || 'Erro ao salvar. Tente novamente.';
     errEl.style.display='block';
   }
 }
@@ -2596,25 +2531,19 @@ async function renderAdminStats(){
 /* ===== ADMIN: SETTINGS ===== */
 function renderAdminSettings(){
   const el = document.getElementById('adminSettingsTab');
+  const adminEmail = currentUser ? currentUser.email : '';
   el.innerHTML = `
     <div class="admin-settings-card">
-      <h3><i class="fas fa-key" style="color:var(--blue);"></i>Credenciais de Acesso ao Painel</h3>
-      <p>Usuário e senha para acessar este painel administrativo (separado da conta dos alunos).</p>
-      <div class="admin-credential">
-        <p><strong>Usuário:</strong> <code>admin</code></p>
-        <p><strong>Senha:</strong> <code>admin123</code></p>
-        <p style="margin-top:8px;font-size:0.8rem;color:var(--muted);"><i class="fas fa-info-circle" style="margin-right:4px;"></i>Você pode alterar as credenciais abaixo.</p>
-      </div>
+      <h3><i class="fas fa-user-shield" style="color:var(--blue);"></i>Minha Conta de Administrador</h3>
+      <p>Você está logado como <strong>${adminEmail}</strong>. O acesso ao painel é liberado para qualquer conta marcada como administrador — não existe mais usuário/senha separado.</p>
     </div>
     <div class="admin-settings-card">
-      <h3><i class="fas fa-user-shield" style="color:var(--gold-dark);"></i>Alterar Credenciais Admin</h3>
-      <p>Modifique o usuário e senha do painel administrativo.</p>
+      <h3><i class="fas fa-key" style="color:var(--gold-dark);"></i>Trocar Minha Senha</h3>
+      <p>Define uma nova senha para a sua própria conta de administrador (login com Supabase Auth).</p>
       <div style="display:flex;flex-direction:column;gap:12px;">
-        <div><label style="font-size:0.82rem;font-weight:600;color:var(--muted);">Novo usuário</label>
-        <input type="text" id="newAdminUser" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.88rem;margin-top:4px;outline:none;" value="admin"></div>
         <div><label style="font-size:0.82rem;font-weight:600;color:var(--muted);">Nova senha</label>
-        <input type="password" id="newAdminPass" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.88rem;margin-top:4px;outline:none;" value="admin123"></div>
-        <button class="btn-admin-action success" onclick="saveAdminCredentials()"><i class="fas fa-floppy-disk"></i>Salvar Credenciais</button>
+        <input type="password" id="newMyPass" placeholder="Mínimo 6 caracteres" style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-size:0.88rem;margin-top:4px;outline:none;"></div>
+        <button class="btn-admin-action success" onclick="saveMyPassword()"><i class="fas fa-floppy-disk"></i>Salvar Nova Senha</button>
       </div>
     </div>
     <div class="admin-settings-card">
@@ -2633,12 +2562,13 @@ function renderAdminSettings(){
   `;
 }
 
-function saveAdminCredentials(){
-  const user = document.getElementById('newAdminUser').value.trim();
-  const pass = document.getElementById('newAdminPass').value;
-  if(!user || !pass){showToast('Usuário e senha são obrigatórios.','error');return;}
-  localStorage.setItem('aprova_admins', JSON.stringify({[user]:pass}));
-  showToast('Credenciais atualizadas com sucesso!','success');
+async function saveMyPassword(){
+  const pass = document.getElementById('newMyPass').value;
+  if(!pass || pass.length < 6){ showToast('A senha precisa ter no mínimo 6 caracteres.', 'error'); return; }
+  const { error } = await sbClient.auth.updateUser({ password: pass });
+  if(error){ showToast('Erro ao trocar senha: ' + error.message, 'error'); return; }
+  showToast('Senha atualizada com sucesso!', 'success');
+  document.getElementById('newMyPass').value = '';
 }
 
 async function exportAdminData(){
@@ -2668,20 +2598,24 @@ async function exportAdminData(){
 async function resetAllProgress(){
   if(!confirm('ATENÇÃO: Isso vai resetar o progresso de TODOS os alunos.\nXP, streak, horas, atividades e conquistas serão zerados.\nDeseja continuar?')) return;
   if(!confirm('Tem certeza absoluta? Esta ação é irreversível!')) return;
-  await fetchAdminData();
-  await Promise.all(adminUsersCache.map(u=>
-    sbClient.from('user_stats').update({xp:0, streak:0, study_minutes:0, badges:[], progress:{}}).eq('user_id', u.id)
-  ));
-  await sbClient.from('study_sessions').delete().not('id','is',null);
+  const result = await sbAdminAction('resetAll', {});
+  if(!result.success){
+    showToast(result.error || 'Erro ao resetar progressos.', 'error');
+    return;
+  }
   await renderAdminUsers();
   await renderAdminStats();
   showToast('Todos os progressos foram resetados.','error');
 }
 
 async function deleteAllUsers(){
-  if(!confirm('ATENÇÃO: Isso vai excluir TODOS os alunos e todos os dados.\nEsta ação é IRREVERSÍVEL.\nDeseja continuar?')) return;
+  if(!confirm('ATENÇÃO: Isso vai excluir TODOS os alunos (contas com is_admin=false) e todos os dados deles.\nEsta ação é IRREVERSÍVEL.\nDeseja continuar?')) return;
   if(!confirm('Tem certeza ABSOLUTA? Tudo será perdido!')) return;
-  await sbClient.from('users').delete().not('id','is',null);
+  const result = await sbAdminAction('deleteAll', {});
+  if(!result.success){
+    showToast(result.error || 'Erro ao excluir alunos.', 'error');
+    return;
+  }
   await renderAdminUsers();
   await renderAdminStats();
   renderAdminSettings();
@@ -2793,21 +2727,13 @@ let currentRankingType = 'semanal';
 async function fetchRankingReal(type){
   const days = type === 'mensal' ? 30 : 7;
   const since = new Date(Date.now() - days*24*60*60*1000).toISOString();
-  const rows = await sbFetchSessionsSince(since);
+  const { data, error } = await sbClient.rpc('get_ranking', { since });
+  if(error){ console.error('Erro ao buscar ranking:', error); return []; }
 
-  const map = {};
-  rows.forEach(r=>{
-    const uid = r.user_id;
-    const name = (r.users && r.users.name) ? r.users.name : 'Aluno';
-    if(!map[uid]) map[uid] = {name, minutes:0, days:new Set()};
-    map[uid].minutes += r.minutes;
-    map[uid].days.add(new Date(r.created_at).toDateString());
-  });
-
-  let ranking = Object.entries(map).map(([uid, u])=>({
-    name: (currentUser && uid === currentUser.id) ? u.name + ' (você)' : u.name,
-    hours: Math.round((u.minutes/60)*10)/10,
-    days: u.days.size
+  const ranking = (data || []).map(r=>({
+    name: (currentUser && r.user_id === currentUser.id) ? r.name + ' (você)' : r.name,
+    hours: Math.round((Number(r.minutes)/60)*10)/10,
+    days: Number(r.days)
   }));
   ranking.sort((a,b)=> b.hours - a.hours);
   return ranking.slice(0,5);
@@ -3023,18 +2949,28 @@ window.addEventListener('scroll',()=>{
 // Atualiza o display do cronômetro assim que a página carrega
 updateTimerDisplay();
 
-// Auto-login check (agora busca o usuário no Supabase pelo id salvo)
+// Auto-login (o Supabase Auth já guarda a sessão sozinho; aqui só
+// verificamos se existe uma sessão válida e carregamos o perfil)
 (async function(){
-  const id = localStorage.getItem('aprova_current_id');
-  if(id){
-    const { data, error } = await sbClient.from('users').select('*').eq('id', id).maybeSingle();
-    if(!error && data){
-      await enterApp(data);
-    } else {
-      localStorage.removeItem('aprova_current_id');
+  const { data: { session } } = await sbClient.auth.getSession();
+  if(session && session.user){
+    const profile = await sbGetProfile(session.user.id);
+    if(profile){
+      await enterApp({ id: session.user.id, name: profile.name, email: profile.email, is_admin: profile.is_admin });
     }
   }
 })();
+
+// Mantém a sessão sincronizada caso expire ou seja encerrada em outra aba
+sbClient.auth.onAuthStateChange((event) => {
+  if(event === 'SIGNED_OUT' && currentUser){
+    currentUser = null;
+    document.getElementById('mainApp').style.display='none';
+    document.getElementById('adminPanel').style.display='none';
+    document.getElementById('appFooter').style.display='block';
+    document.getElementById('loginScreen').style.display='flex';
+  }
+});
 </script>
 </body>
 </html>
