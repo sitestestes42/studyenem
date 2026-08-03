@@ -1427,24 +1427,14 @@ async function doLogin(e){
     return false;
   }
 
-  // CORREÇÃO DEFINITIVA: Tenta pegar o perfil, e se der erro, cria um perfil de emergência
-  let profile = null;
-  try {
-      profile = await sbGetProfile(data.user.id);
-  } catch(e) { 
-      console.log("Erro ao buscar perfil (criando emergência):", e);
-  }
-
+  const profile = await sbGetProfile(data.user.id);
   if(submitBtn) submitBtn.disabled = false;
 
-  if(!profile) {
-      console.log("⚠️ Perfil não encontrado. Criando perfil temporário para login.");
-      profile = { 
-          id: data.user.id, 
-          name: "Administrador Principal", 
-          email: email, 
-          is_admin: true 
-      };
+  if(!profile){
+    errEl.textContent = 'Sua conta ainda não tem um perfil configurado. Fale com o administrador.';
+    errEl.style.display='block';
+    await sbClient.auth.signOut();
+    return false;
   }
 
   await enterApp({ id: data.user.id, name: profile.name, email: profile.email, is_admin: profile.is_admin });
